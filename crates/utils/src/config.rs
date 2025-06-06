@@ -4,7 +4,7 @@ use {serde::Deserialize, std::collections::HashMap, std::path::PathBuf};
 pub struct Config {
     red_deck_fp: String,
     green_deck_fp: String,
-    win_condition: HashMap<String, u8>,
+    win_condition: HashMap<String, usize>,
 }
 
 impl Config {
@@ -22,7 +22,7 @@ impl Config {
         &self.green_deck_fp
     }
 
-    pub fn get_required_apples(&self, total_players: usize) -> Option<u8> {
+    pub fn get_required_apples(&self, total_players: usize) -> Option<usize> {
         self.win_condition
             .iter()
             .filter_map(|(k, &v)| {
