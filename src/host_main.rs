@@ -12,8 +12,10 @@ pub async fn host_main(players: usize, bots: usize) -> Result<()> {
             config.red_deck_path().into(),
             config.green_deck_path().into(),
         )
-        .await;
+        .await?;
+
     deck_handler.shuffle();
+
     if let Some(card) = deck_handler.get_green_card() {
         println!("{}", card);
     }

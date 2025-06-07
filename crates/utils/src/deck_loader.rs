@@ -1,9 +1,12 @@
-use anyhow::Result;
-use apples_core::cards::card::{BaseCard, Card};
-use apples_core::deck::deck::Deck;
-use std::path::Path;
-use tokio::fs::File;
-use tokio::io::{AsyncBufReadExt, AsyncReadExt, BufReader};
+use {
+    anyhow::Result,
+    apples_core::{
+        cards::card::{BaseCard, Card},
+        deck::deck::Deck,
+    },
+    std::path::Path,
+    tokio::{fs::File, io::AsyncReadExt},
+};
 /// Generic deck loader that loads the deck from the file_path and tries and parses the file and
 /// builds the deck and returns it if it succedes otherwise return error
 pub async fn load_deck<T, P>(file_path: P) -> Result<Deck<T>>

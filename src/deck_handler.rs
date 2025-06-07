@@ -1,8 +1,11 @@
-use apples_core::{
-    cards::{green_card::GreenCard, red_card::RedCard},
-    deck::{green_deck::GreenDeck, red_deck::RedDeck},
+use {
+    anyhow::Result,
+    apples_core::{
+        cards::{green_card::GreenCard, red_card::RedCard},
+        deck::{green_deck::GreenDeck, red_deck::RedDeck},
+    },
+    apples_utils::deck_loader::load_deck,
 };
-use apples_utils::deck_loader::load_deck;
 
 /// DeckHandler class that holds a green & a red deck
 pub struct DeckHandler {
@@ -43,21 +46,18 @@ impl DeckHandler {
         self.red_deck.shuffle();
         self.green_deck.shuffle();
     }
+
     /// Load the decks
     pub async fn load_decks(
         &mut self,
         red_file_path: std::path::PathBuf,
         green_file_path: std::path::PathBuf,
-    ) {
-        let red_deck: RedDeck = load_deck::<RedCard, _>(red_file_path)
-            .await
-            .expect("failed to load red deck");
-        let green_deck: GreenDeck = load_deck::<GreenCard, _>(green_file_path)
-            .await
-            .expect("failed to load green deck");
-
+    ) -> Result<()> {
+        let red_deck: RedDeck = load_deck::<RedCard, _>(red_file_path).await?;
+        let green_deck: GreenDeck = load_deck::<GreenCard, _>(green_file_path).await?;
         self.red_deck.extend(red_deck);
         self.green_deck.extend(green_deck);
+        Ok(())
     }
 
     /// Return the deck size of the green deck

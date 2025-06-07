@@ -10,6 +10,8 @@ apples-protocol = {path = "crates/protocol"}
 apples-utils = {path = "crates/utils"}
 rand.workspace = true
 anyhow = "1.0"
+ractor_cluster = { version = "0.15.6", features = ["async-trait"] }
+ractor = { version="0.15.6", features = ["async-trait", "serde"] }
 
 [workspace]
 members = [
@@ -24,6 +26,5 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tracing = "0.1"
 tracing-subscriber = "0.3"
-ractor = "0.10"
 rand = "0.8"
 itertools = "0.12"

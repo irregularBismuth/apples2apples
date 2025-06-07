@@ -30,6 +30,7 @@ impl RedCard {
         Self(BaseCard::new(name_, text_, id_))
     }
 }
+
 /// Implement the display trait for easily displaying the RedCard
 impl fmt::Display for RedCard {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -52,4 +53,5 @@ impl From<BaseCard> for RedCard {
         )
     }
 }
+
 pub use super::card::Card;
