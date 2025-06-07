@@ -1,3 +1,4 @@
+use super::connection::ConnectionMsg;
 use ahash::AHashMap;
 use apples_core::protocol::message::GameMessage;
 use apples_utils::actor_types;
@@ -5,20 +6,16 @@ use ractor::{Actor, ActorProcessingErr, ActorRef};
 use ractor_cluster::RactorMessage;
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddrV4;
-#[derive(RactorMessage)]
-pub enum ConnMsg {
-    Send(GameMessage),
-}
 
 #[derive(RactorMessage)]
 pub enum RegistryMsg {
-    AddClient(usize, ActorRef<ConnMsg>),
+    AddClient(usize, ActorRef<ConnectionMsg>),
 }
 
 pub struct ConnectionRegistry;
 
 pub struct RegistryState {
-    clients: AHashMap<usize, ActorRef<ConnMsg>>,
+    clients: AHashMap<usize, ActorRef<ConnectionMsg>>,
 }
 
 impl RegistryState {
@@ -53,7 +50,7 @@ impl Actor for ConnectionRegistry {
                     state.clients.insert(id, conn);
                 } else {
                     for (id, conn) in &state.clients {
-                        ractor::cast!(conn, ConnMsg::Send(GameMessage::AssignId(*id)))?;
+                        ractor::cast!(conn, ConnectionMsg::Send(GameMessage::AssignId(*id)))?;
                     }
                 }
             }

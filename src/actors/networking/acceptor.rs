@@ -1,3 +1,4 @@
+use super::connection::Connection;
 use super::registry::RegistryMsg;
 use apples_utils::actor_types;
 use ractor::{Actor, ActorProcessingErr, ActorRef};
@@ -21,8 +22,10 @@ impl Actor for Acceptor {
                 let conn_id = id;
                 id += 1;
                 println!("id {}", id);
-                //let (conn,_)= ractor::Actor::spawn(None, (),()).await.expect("");
-                // ractor::cast!()
+                let (conn, _) = ractor::Actor::spawn(None, Connection, (stream))
+                    .await
+                    .expect("");
+                ractor::cast!(registry, RegistryMsg::AddClient(id, conn));
             }
         });
         Ok(())
