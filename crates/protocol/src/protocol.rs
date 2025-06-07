@@ -1,8 +1,9 @@
-use crate::transport::Transport;
-use anyhow::Result;
-use bytes::Bytes;
-use serde::de::DeserializeOwned;
-use serde::Serialize;
+use {
+    crate::transport::Transport,
+    anyhow::Result,
+    bytes::Bytes,
+    serde::{de::DeserializeOwned, Serialize},
+};
 
 pub struct Protocol<T: Transport> {
     transport: T,

@@ -13,7 +13,7 @@ anyhow = "1.0"
 ractor_cluster = { version = "0.15.6", features = ["async-trait"] }
 ractor = { version="0.15.6", features = ["async-trait", "serde"] }
 ahash = "0.8.12"
-
+serde ={workspace = true}
 [workspace]
 members = [
     "crates/core",
