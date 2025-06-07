@@ -26,14 +26,15 @@ impl Config {
         self.win_condition
             .iter()
             .filter_map(|(k, &v)| {
-                if let Some(n) = k.strip_suffix("_p")?.parse::<usize>().ok() {
-                    Some((n, v))
-                } else {
-                    None
-                }
+                k.strip_suffix("_p")
+                    .and_then(|s| s.parse::<usize>().ok())
+                    .map(|n| (n, v))
             })
-            .filter(|(n, _)| *n <= total_players)
-            .max_by_key(|(n, _)| *n)
+            .fold(None, |acc, (n, v)| match acc {
+                Some((best_n, _)) if n <= total_players && n > best_n => Some((n, v)),
+                Some(_) => acc,
+                None => Some((n, v)),
+            })
             .map(|(_, v)| v)
     }
 }
