@@ -16,6 +16,7 @@ pub struct ManagerState {
     scores: AHashMap<usize, usize>,
     win_condition: usize,
 }
+
 #[derive(RactorMessage)]
 pub enum ScoreMessage {
     AddScoreCheckWinner(usize, usize, RpcReplyPort<ScoreResult>),
