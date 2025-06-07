@@ -22,6 +22,7 @@ pub enum ScoreMessage {
     AddScoreCheckWinner(usize, usize, RpcReplyPort<ScoreResult>),
     GetScore(usize, RpcReplyPort<usize>),
 }
+
 ///Alias for score tx
 pub type ScoreTx = ActorRef<ScoreMessage>;
 

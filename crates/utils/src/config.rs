@@ -1,10 +1,11 @@
+use crate::game_mode::GameMode;
 use {serde::Deserialize, std::collections::HashMap, std::path::PathBuf};
-
 #[derive(Deserialize)]
 pub struct Config {
     red_deck_fp: String,
     green_deck_fp: String,
     win_condition: HashMap<String, usize>,
+    game_mode: GameMode,
 }
 
 impl Config {
@@ -36,5 +37,9 @@ impl Config {
                 None => Some((n, v)),
             })
             .map(|(_, v)| v)
+    }
+
+    pub fn game_mode(&self) -> GameMode {
+        self.game_mode
     }
 }

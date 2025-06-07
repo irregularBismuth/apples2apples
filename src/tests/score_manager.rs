@@ -18,6 +18,14 @@ async fn score_handler() -> anyhow::Result<()> {
         "Updated score should not be enough to win the game"
     );
 
+    let id = 0;
+    let score = ractor::call!(score_handler, ScoreMessage::GetScore, id)?;
+    assert!(
+        score == points,
+        "Score should be equal to {} to win the game",
+        points
+    );
+
     let (id, points) = (17, win_condition);
     let updated_result =
         ractor::call!(score_handler, ScoreMessage::AddScoreCheckWinner, id, points)?;
