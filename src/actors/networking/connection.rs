@@ -4,10 +4,7 @@ use apples_core::protocol::message::GameMessage;
 use apples_utils::actor_types;
 use ractor::{Actor, ActorProcessingErr, ActorRef};
 use ractor_cluster::RactorMessage;
-use std::sync::Arc;
 use tokio::net::TcpStream;
-use tokio::sync::Mutex;
-use tokio::time::{timeout, Duration};
 
 pub struct Connection;
 
@@ -33,7 +30,7 @@ impl Actor for Connection {
         let stream = args;
         let (reader, writer) = stream.into_split();
         let (writer, _) = ractor::Actor::spawn(None, Writer, writer).await?;
-        let (reader, _) = ractor::Actor::spawn(None, Reader, (reader, myself)).await?;
+        let (_reader, _) = ractor::Actor::spawn(None, Reader, (reader, myself)).await?;
         Ok(ConnectionState { writer })
     }
 

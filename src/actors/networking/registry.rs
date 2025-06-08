@@ -47,22 +47,14 @@ impl Actor for ConnectionRegistry {
         match msg {
             RegistryMsg::AddClient(id, conn) => {
                 state.clients.insert(id, conn);
-                ractor::cast!(
-                    myself,
-                    RegistryMsg::Unicast(
-                        id,
-                        GameMessage::RequestJudgeChoice(
-                            Vec::new(),
-                            apples_core::cards::green_card::GreenCard::new(
-                                "0".to_string(),
-                                "1".to_string(),
-                                1
-                            )
-                        )
-                    )
-                )?;
+                ractor::cast!(myself, RegistryMsg::Unicast(id, GameMessage::AssignId(id)))?;
             }
-            RegistryMsg::Broadcast(msg) => {}
+            RegistryMsg::Broadcast(msg) => {
+                for (id, _) in state.clients.iter() {
+                    let msg = msg.clone();
+                    ractor::cast!(myself, RegistryMsg::Unicast(*id, msg));
+                }
+            }
             RegistryMsg::Unicast(id, msg) => {
                 if let Some(client) = state.clients.get(&id) {
                     ractor::cast!(client, ConnectionMsg::Send(msg))?;

@@ -23,7 +23,7 @@ impl Actor for Acceptor {
                 id += 1;
                 let (conn, _) = ractor::Actor::spawn(None, Connection, stream)
                     .await
-                    .expect("");
+                    .expect("failed to spawn connection actor");
                 if let Err(err) = ractor::cast!(registry, RegistryMsg::AddClient(conn_id, conn)) {
                     eprintln!("error {}", err);
                 }

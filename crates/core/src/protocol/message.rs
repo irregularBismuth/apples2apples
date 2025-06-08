@@ -2,7 +2,7 @@ use crate::cards::{green_card::GreenCard, red_card::RedCard};
 
 pub use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum GameMessage {
     AssignId(usize),
     DealRedCard(RedCard),
@@ -12,5 +12,7 @@ pub enum GameMessage {
     RedCardPlayed(usize, RedCard),
     JudgeVoted(usize),
     WinnerAnnouncement(usize, GreenCard),
+    CurrentScore(usize),
+    MaxScore(usize),
     GameEnd,
 }
