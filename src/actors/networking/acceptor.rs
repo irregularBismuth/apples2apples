@@ -3,6 +3,7 @@ use super::registry::RegistryMsg;
 use apples_utils::actor_types;
 use ractor::{Actor, ActorProcessingErr, ActorRef};
 use tokio::net::TcpListener;
+/// Connection Acceptor
 pub struct Acceptor;
 
 #[ractor::async_trait]

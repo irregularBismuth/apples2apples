@@ -6,12 +6,9 @@ use ractor::{Actor, ActorProcessingErr, ActorRef};
 use tokio::net::tcp::OwnedReadHalf;
 pub struct Reader;
 
-pub struct ReaderState {}
-
 #[ractor::async_trait]
 impl Actor for Reader {
     actor_types!((), (), (OwnedReadHalf, ActorRef<ConnectionMsg>));
-
     async fn pre_start(
         &self,
         _myself: ActorRef<Self::Msg>,
