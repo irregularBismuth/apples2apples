@@ -1,7 +1,6 @@
+use super::reader::{Reader, ReaderMsg};
+use super::writer::{Writer, WriterMsg};
 use apples_core::protocol::message::GameMessage;
-use apples_protocol::framed_transport::FramedTransport;
-use apples_protocol::reader::Protocol;
-use apples_protocol::tcp_transport::TcpTransport;
 use apples_utils::actor_types;
 use ractor::{Actor, ActorProcessingErr, ActorRef};
 use ractor_cluster::RactorMessage;
@@ -13,7 +12,7 @@ use tokio::time::{timeout, Duration};
 pub struct Connection;
 
 pub struct ConnectionState {
-    transport: Arc<Mutex<Protocol<TcpTransport>>>,
+    writer: ActorRef<WriterMsg>,
 }
 #[derive(RactorMessage)]
 pub enum ConnectionMsg {
@@ -31,35 +30,10 @@ impl Actor for Connection {
         args: Self::Arguments,
     ) -> Result<Self::State, ActorProcessingErr> {
         let stream = args;
-        let (read, write) = stream.into_split();
-        let transport = TcpTransport::new(read, write);
-        let protocol = Protocol::new(transport);
-        let protocol = Arc::new(Mutex::new(protocol));
-        tokio::task::spawn({
-            let protocol = protocol.clone();
-            async move {
-                loop {
-                    let message_result: Option<anyhow::Result<GameMessage>> = {
-                        match timeout(Duration::from_millis(100), protocol.lock()).await {
-                            Ok(mut p) => p.next_message().await,
-                            Err(_) => None,
-                        }
-                    };
-
-                    match message_result {
-                        Some(Ok(message)) => {}
-                        Some(Err(e)) => {}
-                        None => {
-                            let _ = ractor::cast!(myself, ConnectionMsg::Stop);
-                            break;
-                        }
-                    }
-                }
-            }
-        });
-        Ok(ConnectionState {
-            transport: protocol,
-        })
+        let (reader, writer) = stream.into_split();
+        let (writer, _) = ractor::Actor::spawn(None, Writer, writer).await?;
+        let (reader, _) = ractor::Actor::spawn(None, Reader, reader).await?;
+        Ok(ConnectionState { writer })
     }
 
     async fn handle(
@@ -70,10 +44,7 @@ impl Actor for Connection {
     ) -> Result<(), ActorProcessingErr> {
         match msg {
             ConnectionMsg::Send(msg) => {
-                let mut protocol = state.transport.lock().await;
-                if let Err(e) = protocol.send_message(&msg).await {
-                    println!("Failed to send to player");
-                }
+                ractor::cast!(state.writer, WriterMsg::Send(msg))?;
             }
             ConnectionMsg::Stop => {
                 myself.stop(None);

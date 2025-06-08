@@ -1,8 +1,6 @@
 use crate::actors::client_fsm::ClientFsm;
 use crate::actors::networking::connection::Connection;
 use anyhow::Result;
-use apples_protocol::framed_transport::FramedTransport;
-use apples_protocol::reader::Protocol;
 use std::net::SocketAddrV4;
 use tokio::net::TcpStream;
 #[doc = "client.md"]
