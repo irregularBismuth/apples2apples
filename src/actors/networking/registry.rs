@@ -10,6 +10,8 @@ use std::net::SocketAddrV4;
 #[derive(RactorMessage)]
 pub enum RegistryMsg {
     AddClient(usize, ActorRef<ConnectionMsg>),
+    Broadcast(GameMessage),
+    Unicast(usize, GameMessage),
 }
 
 pub struct ConnectionRegistry;
@@ -46,12 +48,26 @@ impl Actor for ConnectionRegistry {
     ) -> Result<(), ActorProcessingErr> {
         match msg {
             RegistryMsg::AddClient(id, conn) => {
-                if state.clients.len() < 2 {
-                    state.clients.insert(id, conn);
-                } else {
-                    for (id, conn) in &state.clients {
-                        ractor::cast!(conn, ConnectionMsg::Send(GameMessage::AssignId(*id)))?;
-                    }
+                state.clients.insert(id, conn);
+                ractor::cast!(
+                    myself,
+                    RegistryMsg::Unicast(
+                        id,
+                        GameMessage::RequestJudgeChoice(
+                            Vec::new(),
+                            apples_core::cards::green_card::GreenCard::new(
+                                "0".to_string(),
+                                "1".to_string(),
+                                1
+                            )
+                        )
+                    )
+                )?;
+            }
+            RegistryMsg::Broadcast(msg) => {}
+            RegistryMsg::Unicast(id, msg) => {
+                if let Some(client) = state.clients.get(&id) {
+                    ractor::cast!(client, ConnectionMsg::Send(msg))?;
                 }
             }
         }

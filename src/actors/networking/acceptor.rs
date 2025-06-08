@@ -21,7 +21,6 @@ impl Actor for Acceptor {
                 let (stream, _) = listener.accept().await.unwrap();
                 let conn_id = id;
                 id += 1;
-                println!("id {}", id);
                 let (conn, _) = ractor::Actor::spawn(None, Connection, (stream))
                     .await
                     .expect("");

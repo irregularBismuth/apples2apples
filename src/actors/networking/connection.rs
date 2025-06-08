@@ -1,4 +1,4 @@
-use super::reader::{Reader, ReaderMsg};
+use super::reader::Reader;
 use super::writer::{Writer, WriterMsg};
 use apples_core::protocol::message::GameMessage;
 use apples_utils::actor_types;
@@ -17,6 +17,7 @@ pub struct ConnectionState {
 #[derive(RactorMessage)]
 pub enum ConnectionMsg {
     Send(GameMessage),
+    Receive(GameMessage),
     Stop,
 }
 
@@ -32,7 +33,7 @@ impl Actor for Connection {
         let stream = args;
         let (reader, writer) = stream.into_split();
         let (writer, _) = ractor::Actor::spawn(None, Writer, writer).await?;
-        let (reader, _) = ractor::Actor::spawn(None, Reader, reader).await?;
+        let (reader, _) = ractor::Actor::spawn(None, Reader, (reader, myself)).await?;
         Ok(ConnectionState { writer })
     }
 
@@ -48,6 +49,9 @@ impl Actor for Connection {
             }
             ConnectionMsg::Stop => {
                 myself.stop(None);
+            }
+            ConnectionMsg::Receive(msg) => {
+                println!("connection msg receive {:?}", msg);
             }
         }
         Ok(())
