@@ -1,8 +1,8 @@
-use {super::player::PlayerId, crate::deck::red_deck::RedDeck};
+use super::player::{PlayerHand, PlayerId};
 
 pub struct BasePlayer {
     pub id: PlayerId,
-    pub hand: RedDeck,
+    pub hand: PlayerHand,
     pub score: usize,
 }
 
@@ -10,7 +10,7 @@ impl BasePlayer {
     pub fn new(id: PlayerId) -> Self {
         Self {
             id,
-            hand: RedDeck::new(),
+            hand: PlayerHand::new(),
             score: 0,
         }
     }

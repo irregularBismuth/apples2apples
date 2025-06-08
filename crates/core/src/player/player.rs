@@ -6,7 +6,6 @@ use {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PlayerId(pub usize);
 
-// Simple hand management in core
 #[derive(Debug, Clone)]
 pub struct PlayerHand {
     cards: Vec<RedCard>,
