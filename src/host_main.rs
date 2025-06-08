@@ -13,7 +13,21 @@ pub async fn host_main(players: usize, bots: usize) -> Result<()> {
             let (acceptor, _) =
                 ractor::Actor::spawn(None, Acceptor, (tcp_listener, registry)).await?;
             let (fsm, handle) = ractor::Actor::spawn(None, HostFsm, ()).await?;
-
+            let socket = config.socket().clone();
+            //TODO: for the bots could be done like this instead thus every player is "remote "and
+            //stored in registry uneccesary but works and I think is cleanest approach
+            for i in 0..100 {
+                tokio::spawn(async move {
+                    let stream = tokio::net::TcpStream::connect(socket).await.unwrap();
+                    let (connector, _) = ractor::Actor::spawn(
+                        None,
+                        crate::actors::networking::connection::Connection,
+                        stream,
+                    )
+                    .await
+                    .unwrap();
+                });
+            }
             let _ = handle.await;
         }
         _ => {

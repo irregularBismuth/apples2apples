@@ -4,8 +4,6 @@ use apples_core::protocol::message::GameMessage;
 use apples_utils::actor_types;
 use ractor::{Actor, ActorProcessingErr, ActorRef};
 use ractor_cluster::RactorMessage;
-use serde::{Deserialize, Serialize};
-use std::net::SocketAddrV4;
 
 #[derive(RactorMessage)]
 pub enum RegistryMsg {
@@ -34,8 +32,8 @@ impl Actor for ConnectionRegistry {
 
     async fn pre_start(
         &self,
-        myself: ActorRef<Self::Msg>,
-        args: Self::Arguments,
+        _myself: ActorRef<Self::Msg>,
+        _args: Self::Arguments,
     ) -> Result<Self::State, ActorProcessingErr> {
         Ok(RegistryState::new())
     }

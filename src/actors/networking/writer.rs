@@ -21,22 +21,22 @@ impl Actor for Writer {
 
     async fn pre_start(
         &self,
-        myself: ActorRef<Self::Msg>,
+        _myself: ActorRef<Self::Msg>,
         args: Self::Arguments,
     ) -> Result<WriterState, ActorProcessingErr> {
-        let mut writer = MessageWriter::new(args);
+        let writer = MessageWriter::new(args);
         Ok(WriterState { writer })
     }
 
     async fn handle(
         &self,
-        myself: ActorRef<Self::Msg>,
+        _myself: ActorRef<Self::Msg>,
         msg: Self::Msg,
         state: &mut Self::State,
     ) -> Result<(), ActorProcessingErr> {
         match msg {
             WriterMsg::Send(msg) => {
-                state.writer.send_message(&msg).await;
+                state.writer.send_message(&msg).await?;
             }
         }
         Ok(())

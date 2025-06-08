@@ -10,7 +10,7 @@ impl Actor for Acceptor {
     actor_types!((), (), (TcpListener, ActorRef<RegistryMsg>));
     async fn pre_start(
         &self,
-        myself: ActorRef<Self::Msg>,
+        _myself: ActorRef<Self::Msg>,
         args: Self::Arguments,
     ) -> Result<(), ActorProcessingErr> {
         let listener = args.0;
@@ -21,10 +21,12 @@ impl Actor for Acceptor {
                 let (stream, _) = listener.accept().await.unwrap();
                 let conn_id = id;
                 id += 1;
-                let (conn, _) = ractor::Actor::spawn(None, Connection, (stream))
+                let (conn, _) = ractor::Actor::spawn(None, Connection, stream)
                     .await
                     .expect("");
-                ractor::cast!(registry, RegistryMsg::AddClient(id, conn));
+                if let Err(err) = ractor::cast!(registry, RegistryMsg::AddClient(conn_id, conn)) {
+                    eprintln!("error {}", err);
+                }
             }
         });
         Ok(())

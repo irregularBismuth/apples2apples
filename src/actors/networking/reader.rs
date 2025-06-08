@@ -14,15 +14,13 @@ impl Actor for Reader {
 
     async fn pre_start(
         &self,
-        myself: ActorRef<Self::Msg>,
+        _myself: ActorRef<Self::Msg>,
         args: Self::Arguments,
     ) -> Result<(), ActorProcessingErr> {
         let mut reader = MessageReader::new(args.0);
         let connection = args.1;
         tokio::spawn(async move {
-            let myself = myself.clone();
             while let Some(Ok(msg)) = reader.next_message::<GameMessage>().await {
-                println!("{:?}", msg);
                 let _ = ractor::cast!(connection, ConnectionMsg::Receive(msg));
             }
         });
