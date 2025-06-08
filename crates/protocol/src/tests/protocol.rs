@@ -1,46 +1,42 @@
-use {
-    crate::{framed_transport::FramedTransport, protocol::Protocol},
-    anyhow::Result,
-    serde::{Deserialize, Serialize},
-    tokio::io::duplex,
-};
+#[cfg(test)]
+mod tests {
+    use crate::{reader::MessageReader, writer::MessageWriter};
+    use anyhow::Result;
+    use serde::{Deserialize, Serialize};
+    use tokio::io::duplex;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
-struct Ping(String);
+    #[derive(Serialize, Deserialize, Debug, PartialEq)]
+    struct Ping(String);
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
-struct Pong(String);
+    #[derive(Serialize, Deserialize, Debug, PartialEq)]
+    struct Pong(String);
 
-#[tokio::test]
-async fn protocol_roundtrip_over_memory() -> Result<()> {
-    let max_buf_size = 1024;
-    let (a, b) = duplex(max_buf_size);
+    #[tokio::test]
+    async fn reader_writer_roundtrip_over_memory() -> Result<()> {
+        let (a, b) = duplex(1024);
+        let (a_r, a_w) = tokio::io::split(a);
+        let (b_r, b_w) = tokio::io::split(b);
 
-    let (a_r, a_w) = tokio::io::split(a);
-    let (b_r, b_w) = tokio::io::split(b);
+        let mut client_reader = MessageReader::new(a_r);
+        let mut client_writer = MessageWriter::new(a_w);
+        let mut server_reader = MessageReader::new(b_r);
+        let mut server_writer = MessageWriter::new(b_w);
 
-    let a_transport = FramedTransport::new(a_r, a_w);
-    let b_transport = FramedTransport::new(b_r, b_w);
+        let server_task = tokio::spawn(async move {
+            let Ping(msg) = server_reader.next_message().await.unwrap().unwrap();
+            assert_eq!(msg, "hello");
 
-    let mut client_proto = Protocol::new(a_transport);
-    let mut server_proto = Protocol::new(b_transport);
+            server_writer
+                .send_message(&Pong("world".into()))
+                .await
+                .unwrap();
+        });
 
-    let server = tokio::spawn(async move {
-        let Ping(msg): Ping = server_proto.next_message().await.unwrap().unwrap();
-        assert_eq!(msg, "hello");
+        client_writer.send_message(&Ping("hello".into())).await?;
+        let Pong(reply) = client_reader.next_message().await.unwrap().unwrap();
+        assert_eq!(reply, "world");
 
-        server_proto
-            .send_message(&Pong("world".into()))
-            .await
-            .unwrap();
-    });
-
-    client_proto.send_message(&Ping("hello".into())).await?;
-
-    let Pong(reply): Pong = client_proto.next_message().await.unwrap().unwrap();
-
-    assert_eq!(reply, "world");
-
-    server.await.unwrap();
-    Ok(())
+        server_task.await.unwrap();
+        Ok(())
+    }
 }

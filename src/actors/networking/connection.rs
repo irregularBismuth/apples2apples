@@ -1,6 +1,6 @@
 use apples_core::protocol::message::GameMessage;
 use apples_protocol::framed_transport::FramedTransport;
-use apples_protocol::protocol::Protocol;
+use apples_protocol::reader::Protocol;
 use apples_protocol::tcp_transport::TcpTransport;
 use apples_utils::actor_types;
 use ractor::{Actor, ActorProcessingErr, ActorRef};
@@ -8,6 +8,8 @@ use ractor_cluster::RactorMessage;
 use std::sync::Arc;
 use tokio::net::TcpStream;
 use tokio::sync::Mutex;
+use tokio::time::{timeout, Duration};
+
 pub struct Connection;
 
 pub struct ConnectionState {
@@ -38,15 +40,16 @@ impl Actor for Connection {
             async move {
                 loop {
                     let message_result: Option<anyhow::Result<GameMessage>> = {
-                        let mut p = protocol.lock().await;
-                        p.next_message().await
+                        match timeout(Duration::from_millis(100), protocol.lock()).await {
+                            Ok(mut p) => p.next_message().await,
+                            Err(_) => None,
+                        }
                     };
 
                     match message_result {
                         Some(Ok(message)) => {}
                         Some(Err(e)) => {}
                         None => {
-                            println!("Player disconnected ");
                             let _ = ractor::cast!(myself, ConnectionMsg::Stop);
                             break;
                         }
@@ -69,7 +72,7 @@ impl Actor for Connection {
             ConnectionMsg::Send(msg) => {
                 let mut protocol = state.transport.lock().await;
                 if let Err(e) = protocol.send_message(&msg).await {
-                    eprintln!("Failed to send to player");
+                    println!("Failed to send to player");
                 }
             }
             ConnectionMsg::Stop => {
