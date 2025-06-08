@@ -31,7 +31,7 @@ where
         }
     }
 
-    /// Deserialize the next frame from JSON into `M`.
+    /// Convenience: deserialize the next frame from JSON into `M`.
     pub async fn next_message<M: serde::de::DeserializeOwned>(&mut self) -> Option<Result<M>> {
         self.next_frame()
             .await

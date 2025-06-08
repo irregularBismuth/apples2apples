@@ -16,26 +16,33 @@ pub struct ConnectionRegistry;
 
 pub struct RegistryState {
     clients: AHashMap<usize, ActorRef<ConnectionMsg>>,
+    reg_type: RegistryType,
 }
 
 impl RegistryState {
-    pub fn new() -> RegistryState {
+    pub fn new(reg_type: RegistryType) -> RegistryState {
         Self {
             clients: AHashMap::new(),
+            reg_type,
         }
     }
+}
+#[derive(PartialEq)]
+pub enum RegistryType {
+    Host,
+    Client,
 }
 
 #[ractor::async_trait]
 impl Actor for ConnectionRegistry {
-    actor_types!(RegistryMsg, RegistryState, ());
+    actor_types!(RegistryMsg, RegistryState, RegistryType);
 
     async fn pre_start(
         &self,
         _myself: ActorRef<Self::Msg>,
-        _args: Self::Arguments,
+        args: Self::Arguments,
     ) -> Result<Self::State, ActorProcessingErr> {
-        Ok(RegistryState::new())
+        Ok(RegistryState::new(args))
     }
 
     async fn handle(
@@ -47,7 +54,9 @@ impl Actor for ConnectionRegistry {
         match msg {
             RegistryMsg::AddClient(id, conn) => {
                 state.clients.insert(id, conn);
-                ractor::cast!(myself, RegistryMsg::Unicast(id, GameMessage::AssignId(id)))?;
+                if state.reg_type == RegistryType::Host {
+                    ractor::cast!(myself, RegistryMsg::Unicast(id, GameMessage::AssignId(id)))?;
+                }
             }
             RegistryMsg::Broadcast(msg) => {
                 for (id, _) in state.clients.iter() {

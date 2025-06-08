@@ -4,9 +4,13 @@ use apples_core::player::{
 };
 
 pub struct Bot {
-    base: BasePlayer,
+    player: BasePlayer,
 }
 
 impl Bot {
-    pub fn new() -> () {}
+    pub fn new(id: usize) -> Bot {
+        Self {
+            player: BasePlayer::new(PlayerId(id)),
+        }
+    }
 }
