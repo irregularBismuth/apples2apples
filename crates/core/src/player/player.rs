@@ -3,7 +3,7 @@ use {
     async_trait::async_trait,
 };
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd)]
 pub struct PlayerId(pub usize);
 
 #[derive(Debug, Clone)]

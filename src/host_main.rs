@@ -5,6 +5,7 @@ use crate::actors::networking::{
     acceptor::Acceptor,
     registry::{ConnectionRegistry, RegistryType},
 };
+use crate::actors::player_manager::PlayerManager;
 use crate::actors::score_manager::ScoreManager;
 use crate::deck_handler::DeckHandler;
 use anyhow::Result;
@@ -27,16 +28,18 @@ pub async fn host_main(players: usize, bots: usize) -> Result<()> {
                 .expect("failed to get win condition");
             deck.shuffle();
 
+            let (player_manager, _) = ractor::Actor::spawn(None, PlayerManager, ()).await?;
+
             let (score_manager, _) =
                 ractor::Actor::spawn(None, ScoreManager, win_condition).await?;
 
             let (dealer, _) = ractor::Actor::spawn(None, DealerActor, deck).await?;
 
-            let (registry, _) =
-                ractor::Actor::spawn(None, ConnectionRegistry, RegistryType::Host).await?;
-            let (_, _) = ractor::Actor::spawn(None, Acceptor, (tcp_listener, registry)).await?;
             let host_state = HostState::new(dealer, score_manager);
             let (fsm, handle) = ractor::Actor::spawn(None, HostFsm, host_state).await?;
+            let (registry, _) =
+                ractor::Actor::spawn(None, ConnectionRegistry, RegistryType::Host(fsm)).await?;
+            let (_, _) = ractor::Actor::spawn(None, Acceptor, (tcp_listener, registry)).await?;
             let _ = handle.await;
         }
         _ => {

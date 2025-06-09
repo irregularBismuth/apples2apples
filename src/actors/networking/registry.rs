@@ -27,9 +27,11 @@ impl RegistryState {
         }
     }
 }
-#[derive(PartialEq)]
+use crate::actors::host_fsm::HostMsg;
+use std::mem;
+
 pub enum RegistryType {
-    Host,
+    Host(ActorRef<HostMsg>),
     Client,
 }
 
@@ -53,9 +55,18 @@ impl Actor for ConnectionRegistry {
     ) -> Result<(), ActorProcessingErr> {
         match msg {
             RegistryMsg::AddClient(id, conn) => {
-                state.clients.insert(id, conn);
-                if state.reg_type == RegistryType::Host {
+                const AMOUNT_NEEDED: usize = 2;
+                if state.clients.len() <= AMOUNT_NEEDED {
+                    state.clients.insert(id, conn);
+                }
+                if matches!(state.reg_type, RegistryType::Host(_)) {
                     ractor::cast!(myself, RegistryMsg::Unicast(id, GameMessage::AssignId(id)))?;
+                }
+
+                if let RegistryType::Host(host_fsm) = &state.reg_type {
+                    if state.clients.len() == AMOUNT_NEEDED {
+                        ractor::cast!(host_fsm, HostMsg::Start)?;
+                    }
                 }
             }
             RegistryMsg::Broadcast(msg) => {

@@ -43,10 +43,10 @@ impl Actor for BotActor {
             }
             BotMsg::RequestCardChoice(_green, reply) => {
                 //TODO: alter this with choice provider somehow
-                reply.send(Some(0));
+                reply.send(Some(0))?;
             }
-            BotMsg::RequstJudgeChoice(choices, _green_card, reply) => {
-                reply.send(Some(0));
+            BotMsg::RequstJudgeChoice(_choices, _green_card, reply) => {
+                reply.send(Some(0))?;
             }
         }
         Ok(())

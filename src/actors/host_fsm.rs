@@ -18,7 +18,7 @@ impl HostState {
     }
 }
 
-#[derive(RactorMessage)]
+#[derive(RactorMessage, PartialEq, PartialOrd)]
 pub enum HostMsg {
     Start,
     PlayerConnected(PlayerId),
@@ -33,7 +33,6 @@ impl Actor for HostFsm {
         myself: ActorRef<Self::Msg>,
         args: Self::Arguments,
     ) -> Result<Self::State, ActorProcessingErr> {
-        ractor::cast!(myself, HostMsg::Start);
         Ok(args)
     }
 

@@ -16,6 +16,7 @@ pub async fn client_main(socket: SocketAddrV4) -> Result<()> {
         registry,
         crate::actors::networking::registry::RegistryMsg::AddClient(0, connector)
     )?;
+
     ractor::cast!(
         registry,
         crate::actors::networking::registry::RegistryMsg::Unicast(
