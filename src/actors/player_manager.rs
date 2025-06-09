@@ -36,6 +36,10 @@ impl Actor for PlayerManager {
         myself: ActorRef<Self::Msg>,
         args: Self::Arguments,
     ) -> Result<Self::State, ActorProcessingErr> {
+        for amount in 0..args.1 .0 {
+            ractor::cast!(myself, PlayerMsg::AddBot(PlayerId(amount)))?;
+        }
+
         Ok(PlayerState {
             players: AHashMap::new(),
             expected: args,

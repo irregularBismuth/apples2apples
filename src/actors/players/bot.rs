@@ -24,6 +24,7 @@ impl Actor for BotActor {
         _myself: ActorRef<Self::Msg>,
         args: Self::Arguments,
     ) -> Result<BotState, ActorProcessingErr> {
+        println!("spawned bot {}", args.0);
         Ok(BotState {
             bot: Bot::new(args),
         })
