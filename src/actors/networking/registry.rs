@@ -1,4 +1,5 @@
 use super::connection::ConnectionMsg;
+use crate::actors::player_manager::PlayerMsg;
 use ahash::AHashMap;
 use apples_core::protocol::message::GameMessage;
 use apples_utils::actor_types;
@@ -17,14 +18,14 @@ pub struct ConnectionRegistry;
 use crate::actors::host_fsm::HostMsg;
 pub struct RegistryState {
     clients: AHashMap<usize, ActorRef<ConnectionMsg>>,
-    fsm: ActorRef<HostMsg>,
+    player_manager: ActorRef<PlayerMsg>,
 }
 
 impl RegistryState {
-    pub fn new(fsm: ActorRef<HostMsg>) -> RegistryState {
+    pub fn new(player_manager: ActorRef<PlayerMsg>) -> RegistryState {
         Self {
             clients: AHashMap::new(),
-            fsm,
+            player_manager,
         }
     }
 }
@@ -32,7 +33,7 @@ use std::mem;
 
 #[ractor::async_trait]
 impl Actor for ConnectionRegistry {
-    actor_types!(RegistryMsg, RegistryState, ActorRef<HostMsg>);
+    actor_types!(RegistryMsg, RegistryState, ActorRef<PlayerMsg>);
 
     async fn pre_start(
         &self,
@@ -53,8 +54,8 @@ impl Actor for ConnectionRegistry {
                 state.clients.insert(id, conn);
                 ractor::cast!(myself, RegistryMsg::Unicast(id, GameMessage::AssignId(id)))?;
                 ractor::cast!(
-                    state.fsm,
-                    HostMsg::PlayerConnected(apples_core::player::player::PlayerId(id))
+                    state.player_manager,
+                    PlayerMsg::AddPlayer(apples_core::player::player::PlayerId(id))
                 )?;
             }
             RegistryMsg::Broadcast(msg) => {

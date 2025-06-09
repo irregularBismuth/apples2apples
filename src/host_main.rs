@@ -26,15 +26,17 @@ pub async fn host_main(players: usize, bots: usize) -> Result<()> {
             deck.shuffle();
 
             let (player_manager, _) = ractor::Actor::spawn(None, PlayerManager, ()).await?;
+            let (registry, _) =
+                ractor::Actor::spawn(None, ConnectionRegistry, player_manager.clone()).await?;
 
             let (score_manager, _) =
                 ractor::Actor::spawn(None, ScoreManager, win_condition).await?;
 
             let (dealer, _) = ractor::Actor::spawn(None, DealerActor, deck).await?;
 
-            let host_state = HostState::new(dealer, score_manager, player_manager);
+            let host_state = HostState::new(dealer, score_manager, player_manager.clone());
             let (fsm, handle) = ractor::Actor::spawn(None, HostFsm, host_state).await?;
-            let (registry, _) = ractor::Actor::spawn(None, ConnectionRegistry, fsm).await?;
+
             let (_, _) = ractor::Actor::spawn(None, Acceptor, (tcp_listener, registry)).await?;
             let _ = handle.await;
         }

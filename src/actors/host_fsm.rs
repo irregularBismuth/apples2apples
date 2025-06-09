@@ -26,7 +26,6 @@ impl HostState {
 #[derive(RactorMessage, PartialEq, PartialOrd)]
 pub enum HostMsg {
     Start,
-    PlayerConnected(PlayerId),
 }
 
 #[ractor::async_trait]
@@ -55,9 +54,6 @@ impl Actor for HostFsm {
                     2
                 )?;
                 println!("{:?}", cards);
-            }
-            HostMsg::PlayerConnected(playerId) => {
-                ractor::cast!(state.player, PlayerMsg::AddPlayer(playerId))?;
             }
         }
         Ok(())
