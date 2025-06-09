@@ -12,9 +12,9 @@ pub struct Bot {
 }
 
 impl Bot {
-    pub fn new(id: usize) -> Bot {
+    pub fn new(id: PlayerId) -> Bot {
         Self {
-            player: BasePlayer::new(PlayerId(id)),
+            player: BasePlayer::new(id),
         }
     }
 

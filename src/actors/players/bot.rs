@@ -17,7 +17,7 @@ pub struct BotState {
 }
 #[ractor::async_trait]
 impl Actor for BotActor {
-    actor_types!(BotMsg, BotState, usize);
+    actor_types!(BotMsg, BotState, apples_core::player::player::PlayerId);
 
     async fn pre_start(
         &self,

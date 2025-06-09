@@ -53,7 +53,8 @@ impl Actor for HostFsm {
                     crate::actors::dealer::DealerMsg::DealRedCards,
                     2
                 )?;
-                println!("{:?}", cards);
+                let amount = ractor::call!(state.player, PlayerMsg::GetPlayerAmount)?;
+                println!("Amount of players {}", amount);
             }
         }
         Ok(())
