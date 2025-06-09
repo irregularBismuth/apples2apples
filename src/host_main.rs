@@ -9,6 +9,7 @@ use crate::actors::score_manager::ScoreManager;
 use crate::deck_handler::DeckHandler;
 use anyhow::Result;
 use apples_utils::{config::Config, consts::CONFIG_TOML, game_mode::GameMode};
+
 #[doc = include_str!("../doc/host.md")]
 pub async fn host_main(players: usize, bots: usize) -> Result<()> {
     let config = Config::parse_config(CONFIG_TOML.into())?;

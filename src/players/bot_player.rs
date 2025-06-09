@@ -17,6 +17,11 @@ impl Bot {
             player: BasePlayer::new(PlayerId(id)),
         }
     }
+
+    pub fn add_card(&mut self, red: RedCard) -> anyhow::Result<()> {
+        self.player.hand.add_card(red);
+        Ok(())
+    }
 }
 
 #[ractor::async_trait]
