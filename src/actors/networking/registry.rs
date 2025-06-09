@@ -14,30 +14,25 @@ pub enum RegistryMsg {
 
 pub struct ConnectionRegistry;
 
+use crate::actors::host_fsm::HostMsg;
 pub struct RegistryState {
     clients: AHashMap<usize, ActorRef<ConnectionMsg>>,
-    reg_type: RegistryType,
+    fsm: ActorRef<HostMsg>,
 }
 
 impl RegistryState {
-    pub fn new(reg_type: RegistryType) -> RegistryState {
+    pub fn new(fsm: ActorRef<HostMsg>) -> RegistryState {
         Self {
             clients: AHashMap::new(),
-            reg_type,
+            fsm,
         }
     }
 }
-use crate::actors::host_fsm::HostMsg;
 use std::mem;
-
-pub enum RegistryType {
-    Host(ActorRef<HostMsg>),
-    Client,
-}
 
 #[ractor::async_trait]
 impl Actor for ConnectionRegistry {
-    actor_types!(RegistryMsg, RegistryState, RegistryType);
+    actor_types!(RegistryMsg, RegistryState, ActorRef<HostMsg>);
 
     async fn pre_start(
         &self,
@@ -55,19 +50,12 @@ impl Actor for ConnectionRegistry {
     ) -> Result<(), ActorProcessingErr> {
         match msg {
             RegistryMsg::AddClient(id, conn) => {
-                const AMOUNT_NEEDED: usize = 2;
-                if state.clients.len() <= AMOUNT_NEEDED {
-                    state.clients.insert(id, conn);
-                }
-                if matches!(state.reg_type, RegistryType::Host(_)) {
-                    ractor::cast!(myself, RegistryMsg::Unicast(id, GameMessage::AssignId(id)))?;
-                }
-
-                if let RegistryType::Host(host_fsm) = &state.reg_type {
-                    if state.clients.len() == AMOUNT_NEEDED {
-                        ractor::cast!(host_fsm, HostMsg::Start)?;
-                    }
-                }
+                state.clients.insert(id, conn);
+                ractor::cast!(myself, RegistryMsg::Unicast(id, GameMessage::AssignId(id)))?;
+                ractor::cast!(
+                    state.fsm,
+                    HostMsg::PlayerConnected(apples_core::player::player::PlayerId(id))
+                )?;
             }
             RegistryMsg::Broadcast(msg) => {
                 for (id, _) in state.clients.iter() {

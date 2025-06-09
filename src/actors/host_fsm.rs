@@ -10,11 +10,16 @@ pub struct HostFsm;
 pub struct HostState {
     dealer: DealerTx,
     score_tx: ScoreTx,
+    player: ActorRef<PlayerMsg>,
 }
 
 impl HostState {
-    pub fn new(dealer: DealerTx, score_tx: ScoreTx) -> HostState {
-        Self { dealer, score_tx }
+    pub fn new(dealer: DealerTx, score_tx: ScoreTx, player: ActorRef<PlayerMsg>) -> HostState {
+        Self {
+            dealer,
+            score_tx,
+            player,
+        }
     }
 }
 
@@ -51,7 +56,9 @@ impl Actor for HostFsm {
                 )?;
                 println!("{:?}", cards);
             }
-            HostMsg::PlayerConnected(playerId) => {}
+            HostMsg::PlayerConnected(playerId) => {
+                ractor::cast!(state.player, PlayerMsg::AddPlayer(playerId))?;
+            }
         }
         Ok(())
     }

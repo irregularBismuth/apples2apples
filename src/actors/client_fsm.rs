@@ -11,7 +11,7 @@ pub enum ClientStates {
     GameOver,
 }
 
-pub struct ClientFsm {}
+pub struct ClientFsm;
 
 #[ractor::async_trait]
 impl Actor for ClientFsm {

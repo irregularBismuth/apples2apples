@@ -1,10 +1,7 @@
 use crate::actors::dealer::DealerActor;
 use crate::actors::host_fsm::HostFsm;
 use crate::actors::host_fsm::HostState;
-use crate::actors::networking::{
-    acceptor::Acceptor,
-    registry::{ConnectionRegistry, RegistryType},
-};
+use crate::actors::networking::{acceptor::Acceptor, registry::ConnectionRegistry};
 use crate::actors::player_manager::PlayerManager;
 use crate::actors::score_manager::ScoreManager;
 use crate::deck_handler::DeckHandler;
@@ -35,10 +32,9 @@ pub async fn host_main(players: usize, bots: usize) -> Result<()> {
 
             let (dealer, _) = ractor::Actor::spawn(None, DealerActor, deck).await?;
 
-            let host_state = HostState::new(dealer, score_manager);
+            let host_state = HostState::new(dealer, score_manager, player_manager);
             let (fsm, handle) = ractor::Actor::spawn(None, HostFsm, host_state).await?;
-            let (registry, _) =
-                ractor::Actor::spawn(None, ConnectionRegistry, RegistryType::Host(fsm)).await?;
+            let (registry, _) = ractor::Actor::spawn(None, ConnectionRegistry, fsm).await?;
             let (_, _) = ractor::Actor::spawn(None, Acceptor, (tcp_listener, registry)).await?;
             let _ = handle.await;
         }

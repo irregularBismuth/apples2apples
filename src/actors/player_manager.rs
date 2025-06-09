@@ -1,3 +1,4 @@
+use apples_core::player::player::PlayerId;
 use apples_utils::actor_types;
 use ractor::{Actor, ActorProcessingErr, ActorRef, RpcReplyPort};
 use ractor_cluster::RactorMessage;
@@ -5,7 +6,7 @@ use ractor_cluster::RactorMessage;
 #[derive(RactorMessage)]
 pub enum PlayerMsg {
     AddBot,
-    AddPlayer,
+    AddPlayer(PlayerId),
     GetPlayerAmount(RpcReplyPort<usize>),
 }
 
@@ -32,7 +33,9 @@ impl Actor for PlayerManager {
     ) -> Result<(), ActorProcessingErr> {
         match msg {
             PlayerMsg::AddBot => {}
-            PlayerMsg::AddPlayer => {}
+            PlayerMsg::AddPlayer(PlayerId(id)) => {
+                println!("added player  with id {}", id);
+            }
             PlayerMsg::GetPlayerAmount(reply) => {
                 reply.send(17)?;
             }
