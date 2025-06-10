@@ -11,6 +11,7 @@ pub enum RegistryMsg {
     AddClient(usize, ActorRef<ConnectionMsg>),
     Broadcast(GameMessage),
     Unicast(usize, GameMessage),
+    Incomming(usize, GameMessage),
 }
 
 pub struct ConnectionRegistry;
@@ -68,6 +69,9 @@ impl Actor for ConnectionRegistry {
                 if let Some(client) = state.clients.get(&id) {
                     ractor::cast!(client, ConnectionMsg::Send(msg))?;
                 }
+            }
+            RegistryMsg::Incomming(id, msg) => {
+                println!("received {:?}", msg);
             }
         }
         Ok(())

@@ -26,6 +26,7 @@ impl HostState {
 #[derive(RactorMessage, PartialEq, PartialOrd)]
 pub enum HostMsg {
     Start,
+    StartRound(),
 }
 
 #[ractor::async_trait]
@@ -53,9 +54,10 @@ impl Actor for HostFsm {
                     crate::actors::dealer::DealerMsg::DealRedCards,
                     2
                 )?;
-                let amount = ractor::call!(state.player, PlayerMsg::GetPlayerAmount)?;
-                println!("Amount of players {}", amount);
+                let amount = ractor::call!(state.player, PlayerMsg::GetPlayerList)?;
+                println!("Amount of players {:?}", amount);
             }
+            HostMsg::StartRound() => {}
         }
         Ok(())
     }

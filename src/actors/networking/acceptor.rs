@@ -18,11 +18,13 @@ impl Actor for Acceptor {
         let registry = args.1;
         tokio::spawn(async move {
             let mut id = 0;
+
             loop {
+                let local = registry.clone();
                 let (stream, _) = listener.accept().await.unwrap();
                 let conn_id = id;
                 id += 1;
-                let (conn, _) = ractor::Actor::spawn(None, Connection, stream)
+                let (conn, _) = ractor::Actor::spawn(None, Connection, (stream, Some(local)))
                     .await
                     .expect("failed to spawn connection actor");
                 if let Err(err) = ractor::cast!(registry, RegistryMsg::AddClient(conn_id, conn)) {

@@ -10,14 +10,16 @@ use ractor_cluster::RactorMessage;
 pub enum PlayerMsg {
     AddBot(PlayerId),
     AddPlayer(PlayerId),
-    GetPlayerAmount(RpcReplyPort<usize>),
+    GetPlayerList(RpcReplyPort<Vec<PlayerId>>),
 }
 
 pub enum PlayerType {
     Bot(ActorRef<BotMsg>),
     Human,
 }
+
 pub struct PlayerManager;
+
 pub struct PlayerState {
     players: AHashMap<PlayerId, PlayerType>,
     expected: ExpectedPlayers,
@@ -26,6 +28,21 @@ pub struct PlayerState {
 pub struct ExpectedHumans(pub usize);
 pub struct ExpectedBots(pub usize);
 pub struct ExpectedPlayers(pub ExpectedHumans, pub ExpectedBots);
+impl ExpectedPlayers {
+    ///Return the amount of expected players
+    pub fn total(&self) -> usize {
+        self.humans() + self.bots()
+    }
+
+    ///Return the amount of expected humans
+    pub fn humans(&self) -> usize {
+        self.0 .0
+    }
+    ///Return the amount of expected bots
+    pub fn bots(&self) -> usize {
+        self.1 .0
+    }
+}
 
 #[ractor::async_trait]
 impl Actor for PlayerManager {
@@ -36,7 +53,7 @@ impl Actor for PlayerManager {
         myself: ActorRef<Self::Msg>,
         args: Self::Arguments,
     ) -> Result<Self::State, ActorProcessingErr> {
-        for amount in 0..args.1 .0 {
+        for amount in 0..args.bots() {
             ractor::cast!(myself, PlayerMsg::AddBot(PlayerId(amount)))?;
         }
 
@@ -58,12 +75,13 @@ impl Actor for PlayerManager {
             }
             PlayerMsg::AddPlayer(PlayerId(id)) => {
                 println!("added player  with id {}", id);
-                if state.expected.0 .0 == id {
+                if state.expected.humans() == id {
                     println!("game start we have all players we need {}", id);
                 }
             }
-            PlayerMsg::GetPlayerAmount(reply) => {
-                reply.send(state.players.len())?;
+            PlayerMsg::GetPlayerList(reply) => {
+                let list: Vec<PlayerId> = state.players.keys().copied().collect();
+                reply.send(list)?;
             }
         }
         Ok(())
