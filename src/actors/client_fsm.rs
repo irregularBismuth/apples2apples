@@ -2,6 +2,7 @@ use super::networking::connection::ConnectionMsg;
 use apples_utils::actor_types;
 use ractor::{Actor, ActorProcessingErr, ActorRef, RpcReplyPort};
 use ractor_cluster::RactorMessage;
+
 #[derive(RactorMessage)]
 pub enum ClientStates {
     AwaitInstruction,

@@ -1,5 +1,6 @@
 use super::reader::Reader;
 use super::writer::{Writer, WriterMsg};
+use crate::actors::client_fsm::ClientStates;
 use crate::actors::networking::registry::RegistryMsg;
 use apples_core::protocol::message::GameMessage;
 use apples_utils::actor_types;
@@ -7,12 +8,23 @@ use ractor::{Actor, ActorProcessingErr, ActorRef};
 use ractor_cluster::RactorMessage;
 use tokio::net::TcpStream;
 
+enum InboundTarget {
+    Registry {
+        registry: ActorRef<RegistryMsg>,
+        conn_id: usize,
+    },
+    Client {
+        fsm: ActorRef<ClientStates>,
+    },
+}
+
 pub struct Connection;
 
 pub struct ConnectionState {
     writer: ActorRef<WriterMsg>,
-    registry: Option<ActorRef<RegistryMsg>>,
+    target: InboundTarget,
 }
+
 #[derive(RactorMessage)]
 pub enum ConnectionMsg {
     Send(GameMessage),
@@ -22,11 +34,7 @@ pub enum ConnectionMsg {
 
 #[ractor::async_trait]
 impl Actor for Connection {
-    actor_types!(
-        ConnectionMsg,
-        ConnectionState,
-        (TcpStream, Option<ActorRef<RegistryMsg>>)
-    );
+    actor_types!(ConnectionMsg, ConnectionState, (TcpStream, InboundTarget));
 
     async fn pre_start(
         &self,
@@ -39,7 +47,7 @@ impl Actor for Connection {
         let (_reader, _) = ractor::Actor::spawn(None, Reader, (reader, myself)).await?;
         Ok(ConnectionState {
             writer,
-            registry: args.1,
+            target: args.1,
         })
     }
 
@@ -56,12 +64,14 @@ impl Actor for Connection {
             ConnectionMsg::Stop => {
                 myself.stop(None);
             }
-            ConnectionMsg::Receive(msg) => {
-                if let Some(registry) = state.registry.clone() {
-                    println!("connection msg registry thing {:?}", msg);
-                    ractor::cast!(registry, RegistryMsg::Incomming(0, GameMessage::GameEnd))?;
+            ConnectionMsg::Receive(msg) => match &state.target {
+                InboundTarget::Registry { registry, conn_id } => {
+                    ractor::cast!(registry, RegistryMsg::Incomming(*conn_id, msg))?;
                 }
-            }
+                InboundTarget::Client { fsm } => {
+                    ractor::cast!(fsm, ClientStates::Judge)?;
+                }
+            },
         }
         Ok(())
     }
