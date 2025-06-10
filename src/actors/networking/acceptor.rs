@@ -24,9 +24,19 @@ impl Actor for Acceptor {
                 let (stream, _) = listener.accept().await.unwrap();
                 let conn_id = id;
                 id += 1;
-                let (conn, _) = ractor::Actor::spawn(None, Connection, (stream, Some(local)))
-                    .await
-                    .expect("failed to spawn connection actor");
+                let (conn, _) = ractor::Actor::spawn(
+                    None,
+                    Connection,
+                    (
+                        stream,
+                        super::connection::InboundTarget::Registry {
+                            registry: local,
+                            conn_id,
+                        },
+                    ),
+                )
+                .await
+                .expect("failed to spawn connection actor");
                 if let Err(err) = ractor::cast!(registry, RegistryMsg::AddClient(conn_id, conn)) {
                     eprintln!("error {}", err);
                 }

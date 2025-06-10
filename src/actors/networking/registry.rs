@@ -71,7 +71,7 @@ impl Actor for ConnectionRegistry {
                 }
             }
             RegistryMsg::Incomming(id, msg) => {
-                println!("received {:?}", msg);
+                println!("received from client {}, {:?}", id, msg);
             }
         }
         Ok(())

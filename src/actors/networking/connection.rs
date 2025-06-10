@@ -8,7 +8,7 @@ use ractor::{Actor, ActorProcessingErr, ActorRef};
 use ractor_cluster::RactorMessage;
 use tokio::net::TcpStream;
 
-enum InboundTarget {
+pub enum InboundTarget {
     Registry {
         registry: ActorRef<RegistryMsg>,
         conn_id: usize,
