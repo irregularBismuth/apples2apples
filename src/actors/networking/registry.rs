@@ -20,13 +20,15 @@ use crate::actors::host_fsm::HostMsg;
 pub struct RegistryState {
     clients: AHashMap<usize, ActorRef<ConnectionMsg>>,
     player_manager: ActorRef<PlayerMsg>,
+    host_fsm: ActorRef<HostMsg>,
 }
 
 impl RegistryState {
-    pub fn new(player_manager: ActorRef<PlayerMsg>) -> RegistryState {
+    pub fn new(player_manager: ActorRef<PlayerMsg>, fsm: ActorRef<HostMsg>) -> RegistryState {
         Self {
             clients: AHashMap::new(),
             player_manager,
+            host_fsm: fsm,
         }
     }
 }
@@ -34,14 +36,18 @@ use std::mem;
 
 #[ractor::async_trait]
 impl Actor for ConnectionRegistry {
-    actor_types!(RegistryMsg, RegistryState, ActorRef<PlayerMsg>);
+    actor_types!(
+        RegistryMsg,
+        RegistryState,
+        (ActorRef<PlayerMsg>, ActorRef<HostMsg>)
+    );
 
     async fn pre_start(
         &self,
         _myself: ActorRef<Self::Msg>,
         args: Self::Arguments,
     ) -> Result<Self::State, ActorProcessingErr> {
-        Ok(RegistryState::new(args))
+        Ok(RegistryState::new(args.0, args.1))
     }
 
     async fn handle(
@@ -62,7 +68,7 @@ impl Actor for ConnectionRegistry {
             RegistryMsg::Broadcast(msg) => {
                 for (id, _) in state.clients.iter() {
                     let msg = msg.clone();
-                    ractor::cast!(myself, RegistryMsg::Unicast(*id, msg));
+                    ractor::cast!(myself, RegistryMsg::Unicast(*id, msg))?;
                 }
             }
             RegistryMsg::Unicast(id, msg) => {
@@ -71,7 +77,7 @@ impl Actor for ConnectionRegistry {
                 }
             }
             RegistryMsg::Incomming(id, msg) => {
-                println!("received from client {}, {:?}", id, msg);
+                ractor::cast!(state.host_fsm, HostMsg::PlayerAction(id, msg))?;
             }
         }
         Ok(())

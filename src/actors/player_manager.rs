@@ -73,10 +73,12 @@ impl Actor for PlayerManager {
             PlayerMsg::AddBot(id) => {
                 let (player, _) = ractor::Actor::spawn(None, BotActor, id).await?;
             }
-            PlayerMsg::AddPlayer(PlayerId(id)) => {
-                println!("added player  with id {}", id);
-                if state.expected.humans() == id {
-                    println!("game start we have all players we need {}", id);
+            PlayerMsg::AddPlayer(id) => {
+                println!("added player  with id {}", id.0);
+                if state.expected.humans() == id.0 {
+                    println!("game start we have all players we need {}", id.0);
+                } else {
+                    state.players.insert(id, PlayerType::Human);
                 }
             }
             PlayerMsg::GetPlayerList(reply) => {

@@ -27,7 +27,7 @@ impl Bot {
 #[ractor::async_trait]
 impl ChoiceProvider for Bot {
     /// Bots just choose the first card available
-    async fn choose_card(&self, _hand: &[RedCard], _green_card: &GreenCard) -> Option<usize> {
+    async fn choose_card(&self, _green_card: &GreenCard) -> Option<usize> {
         Some(0)
     }
 

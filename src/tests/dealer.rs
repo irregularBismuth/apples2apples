@@ -1,6 +1,7 @@
 use crate::actors::dealer::{DealerActor, DealerMsg};
 use crate::deck_handler::DeckHandler;
 use apples_utils::{config::Config, consts::CONFIG_TOML};
+
 #[tokio::test]
 async fn deal_cards() -> anyhow::Result<()> {
     let mut handler = DeckHandler::new();

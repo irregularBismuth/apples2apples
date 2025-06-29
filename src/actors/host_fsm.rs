@@ -22,11 +22,13 @@ impl HostState {
         }
     }
 }
+use apples_core::protocol::message::GameMessage;
 
-#[derive(RactorMessage, PartialEq, PartialOrd)]
+#[derive(RactorMessage, PartialEq)]
 pub enum HostMsg {
     Start,
     StartRound(),
+    PlayerAction(usize, GameMessage),
 }
 
 #[ractor::async_trait]
@@ -49,6 +51,9 @@ impl Actor for HostFsm {
     ) -> Result<(), ActorProcessingErr> {
         match msg {
             HostMsg::Start => {
+                let players = ractor::call!(state.player, PlayerMsg::GetPlayerList)?;
+                for player in players.into_iter() {}
+
                 let cards = ractor::call!(
                     state.dealer,
                     crate::actors::dealer::DealerMsg::DealRedCards,
@@ -58,6 +63,9 @@ impl Actor for HostFsm {
                 println!("Amount of players {:?}", amount);
             }
             HostMsg::StartRound() => {}
+            HostMsg::PlayerAction(id, msg) => {
+                println!("id {}, msg: {:?}", id, msg);
+            }
         }
         Ok(())
     }

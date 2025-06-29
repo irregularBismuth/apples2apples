@@ -39,6 +39,6 @@ impl PlayerHand {
 
 #[async_trait]
 pub trait ChoiceProvider: Send + Sync {
-    async fn choose_card(&self, hand: &[RedCard], green_card: &GreenCard) -> Option<usize>;
+    async fn choose_card(&self, green_card: &GreenCard) -> Option<usize>;
     async fn judge_cards(&self, options: &[RedCard], green_card: &GreenCard) -> Option<usize>;
 }

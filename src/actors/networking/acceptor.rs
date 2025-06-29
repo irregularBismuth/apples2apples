@@ -37,6 +37,7 @@ impl Actor for Acceptor {
                 )
                 .await
                 .expect("failed to spawn connection actor");
+
                 if let Err(err) = ractor::cast!(registry, RegistryMsg::AddClient(conn_id, conn)) {
                     eprintln!("error {}", err);
                 }

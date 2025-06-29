@@ -39,7 +39,7 @@ impl Actor for HumanPlayer {
     ) -> Result<(), ActorProcessingErr> {
         match msg {
             HumanPlayerMsg::DealCard(card) => {
-                state.hand.push(card);
+                state.hand.push(card.clone());
             }
 
             HumanPlayerMsg::RequestCardChoice(green_card, reply) => {}

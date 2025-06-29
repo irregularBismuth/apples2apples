@@ -14,16 +14,22 @@ pub async fn host_main(players: usize, bots: usize) -> Result<()> {
     match config.game_mode() {
         GameMode::Original => {
             let tcp_listener = tokio::net::TcpListener::bind(config.socket()).await?;
-            let mut deck = DeckHandler::new();
-            deck.load_decks(
-                config.red_deck_path().into(),
-                config.green_deck_path().into(),
-            )
-            .await?;
             let win_condition = config
                 .get_required_apples(players + bots)
                 .expect("failed to get win condition");
-            deck.shuffle();
+
+            let deck = {
+                let mut deck = DeckHandler::new();
+                deck.load_decks(
+                    config.red_deck_path().into(),
+                    config.green_deck_path().into(),
+                )
+                .await?;
+                deck.shuffle();
+                deck
+            };
+
+            let (dealer, _) = ractor::Actor::spawn(None, DealerActor, deck).await?;
 
             let (player_manager, _) = ractor::Actor::spawn(
                 None,
@@ -31,16 +37,19 @@ pub async fn host_main(players: usize, bots: usize) -> Result<()> {
                 ExpectedPlayers(ExpectedHumans(players), ExpectedBots(bots)),
             )
             .await?;
-            let (registry, _) =
-                ractor::Actor::spawn(None, ConnectionRegistry, player_manager.clone()).await?;
-
             let (score_manager, _) =
                 ractor::Actor::spawn(None, ScoreManager, win_condition).await?;
 
-            let (dealer, _) = ractor::Actor::spawn(None, DealerActor, deck).await?;
-
             let host_state = HostState::new(dealer, score_manager, player_manager.clone());
+
             let (fsm, handle) = ractor::Actor::spawn(None, HostFsm, host_state).await?;
+
+            let (registry, _) = ractor::Actor::spawn(
+                None,
+                ConnectionRegistry,
+                (player_manager.clone(), fsm.clone()),
+            )
+            .await?;
 
             let (_, _) = ractor::Actor::spawn(None, Acceptor, (tcp_listener, registry)).await?;
             let _ = handle.await;
