@@ -10,6 +10,7 @@ use tokio::net::TcpStream;
 #[doc = "client.md"]
 pub async fn client_main(socket: SocketAddrV4) -> Result<()> {
     let stream = TcpStream::connect(socket).await?;
+
     let (client, handle) = ractor::Actor::spawn(None, ClientFsm, ()).await?;
 
     let (connector, _) = ractor::Actor::spawn(
@@ -27,6 +28,7 @@ pub async fn client_main(socket: SocketAddrV4) -> Result<()> {
             apples_core::cards::red_card::RedCard::new("test".to_string(), "test".to_string(), 1)
         )
     )?;
+
     ractor::cast!(
         connector,
         crate::actors::networking::connection::ConnectionMsg::Send(

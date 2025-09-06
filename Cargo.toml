@@ -8,16 +8,17 @@ tokio = { workspace = true, features = ["full"] }
 apples-core = {path = "crates/core"}
 apples-protocol = {path = "crates/protocol"}
 apples-utils = {path = "crates/utils"}
+actor-macros = {path = "crates/actor-macros"}
 rand.workspace = true
 anyhow = "1.0"
-ractor_cluster = { version = "0.15.6", features = ["async-trait"] }
-ractor = { version="0.15.6", features = ["async-trait", "serde"] }
+
 ahash = "0.8.12"
-serde ={workspace = true}
+serde = {workspace = true}
 
 [workspace]
 members = [
     "crates/core",
+    "crates/actor-macros",
     "crates/protocol", 
     "crates/utils"
 ]

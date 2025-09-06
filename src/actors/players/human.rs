@@ -20,7 +20,6 @@ pub struct HumanPlayerState {
     hand: Vec<RedCard>,
 }
 
-#[ractor::async_trait]
 impl Actor for HumanPlayer {
     actor_types!(HumanPlayerMsg, HumanPlayerState, ());
     async fn pre_start(
