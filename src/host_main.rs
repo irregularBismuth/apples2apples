@@ -1,12 +1,106 @@
-use crate::actors::dealer::DealerActor;
-use crate::actors::host_fsm::HostFsm;
-use crate::actors::host_fsm::HostState;
-use crate::actors::networking::{acceptor::Acceptor, registry::ConnectionRegistry};
-use crate::actors::player_manager::{ExpectedBots, ExpectedHumans, ExpectedPlayers, PlayerManager};
-use crate::actors::score_manager::ScoreManager;
 use crate::deck_handler::DeckHandler;
+use actor_macros::actor;
 use anyhow::Result;
 use apples_utils::{config::Config, consts::CONFIG_TOML, game_mode::GameMode};
+use ractor::cast;
+use ractor::{Actor, ActorProcessingErr, ActorRef};
+#[derive(Debug, Clone)]
+pub enum PongerMsg {
+    Ping(ActorRef<PingerMsg>, u64),
+}
+
+#[derive(Debug, Clone)]
+pub enum PingerMsg {
+    Pong(u64),
+}
+
+#[actor(
+    msg = PongerMsg,
+    state = (),
+    args = (),
+)]
+pub struct Ponger;
+
+impl Ponger {
+    pub async fn handle_msg(
+        &self,
+        _myself: ActorRef<PongerMsg>,
+        msg: PongerMsg,
+        _state: &mut (),
+    ) -> Result<(), ActorProcessingErr> {
+        match msg {
+            PongerMsg::Ping(reply_to, n) => {
+                println!("[Ponger] got Ping({n}), sending Pong({n}) back");
+                cast!(reply_to, PingerMsg::Pong(n))
+                    .map_err(|e| ActorProcessingErr::from(format!("failed to cast Pong: {e}")))?;
+            }
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct PingerState {
+    remaining: u64,
+    ponger: ActorRef<PongerMsg>,
+}
+
+#[actor(
+    msg = PingerMsg,
+    state = PingerState,
+    args = (ActorRef<PongerMsg>, u64),
+    pre_start = on_start
+)]
+pub struct Pinger;
+
+impl Pinger {
+    pub async fn on_start(
+        &self,
+        myself: ActorRef<PingerMsg>,
+        (ponger, total): (ActorRef<PongerMsg>, u64),
+    ) -> Result<PingerState, ActorProcessingErr> {
+        println!("[Pinger] starting with {total} exchanges");
+        if total > 0 {
+            cast!(ponger, PongerMsg::Ping(myself.clone(), 1)).map_err(|e| {
+                ActorProcessingErr::from(format!("failed to cast initial Ping: {e}"))
+            })?;
+        }
+        Ok(PingerState {
+            remaining: total,
+            ponger,
+        })
+    }
+
+    pub async fn handle_msg(
+        &self,
+        myself: ActorRef<PingerMsg>,
+        msg: PingerMsg,
+        state: &mut PingerState,
+    ) -> Result<(), ActorProcessingErr> {
+        match msg {
+            PingerMsg::Pong(n) => {
+                println!(
+                    "[Pinger] got Pong({n}), remaining={}",
+                    state.remaining.saturating_sub(1)
+                );
+                if state.remaining == 0 {
+                    return Ok(());
+                }
+                state.remaining -= 1;
+
+                if state.remaining == 0 {
+                    println!("[Pinger] done!");
+                } else {
+                    let next = n + 1;
+                    cast!(state.ponger, PongerMsg::Ping(myself.clone(), next)).map_err(|e| {
+                        ActorProcessingErr::from(format!("failed to cast next Ping: {e}"))
+                    })?;
+                }
+            }
+        }
+        Ok(())
+    }
+}
 
 #[doc = include_str!("../doc/host.md")]
 pub async fn host_main(players: usize, bots: usize) -> Result<()> {
@@ -29,30 +123,15 @@ pub async fn host_main(players: usize, bots: usize) -> Result<()> {
                 deck
             };
 
-            let (dealer, _) = ractor::Actor::spawn(None, DealerActor, deck).await?;
+            let (ponger_ref, _ponger_task) = Actor::spawn(None, Ponger, ()).await?;
 
-            let (player_manager, _) = ractor::Actor::spawn(
-                None,
-                PlayerManager,
-                ExpectedPlayers(ExpectedHumans(players), ExpectedBots(bots)),
-            )
-            .await?;
-            let (score_manager, _) =
-                ractor::Actor::spawn(None, ScoreManager, win_condition).await?;
+            // spawn Pinger with (ponger_ref, count)
+            let exchanges: u64 = 5;
+            let (_pinger_ref, _pinger_task) =
+                Actor::spawn(None, Pinger, (ponger_ref, exchanges)).await?;
 
-            let host_state = HostState::new(dealer, score_manager, player_manager.clone());
-
-            let (fsm, handle) = ractor::Actor::spawn(None, HostFsm, host_state).await?;
-
-            let (registry, _) = ractor::Actor::spawn(
-                None,
-                ConnectionRegistry,
-                (player_manager.clone(), fsm.clone()),
-            )
-            .await?;
-
-            let (_, _) = ractor::Actor::spawn(None, Acceptor, (tcp_listener, registry)).await?;
-            let _ = handle.await;
+            // Give it a moment to run (you can also await tasks or drive shutdown properly)
+            tokio::time::sleep(tokio::time::Duration::from_millis(300)).await;
         }
         _ => {
             todo!("unsupported now, original is supported")
