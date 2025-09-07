@@ -1,8 +1,8 @@
 use crate::deck_handler::DeckHandler;
-use actor_macros::actor;
+use actor_macros::{actor, actor_handle, actor_pre_start};
 use anyhow::Result;
 use apples_utils::{config::Config, consts::CONFIG_TOML, game_mode::GameMode};
-use ractor::{Actor, ActorProcessingErr, ActorRef, cast};
+use ractor::{cast, Actor, ActorProcessingErr, ActorRef};
 
 #[derive(Debug, Clone)]
 pub enum PongerMsg {
@@ -15,18 +15,13 @@ pub enum PingerMsg {
 }
 
 #[actor(
-    msg = PongerMsg,
-    state = ()
+    msg   = PongerMsg,
+    state = ()  
 )]
 pub struct Ponger;
 
 impl Ponger {
-    pub async fn handle_msg(
-        &self,
-        _myself: ActorRef<PongerMsg>,
-        msg: PongerMsg,
-        _state: &mut (),
-    ) -> Result<(), ActorProcessingErr> {
+    actor_handle!({
         match msg {
             PongerMsg::Ping(reply_to, n) => {
                 println!("[Ponger] got Ping({n}), sending Pong({n}) back");
@@ -35,7 +30,7 @@ impl Ponger {
             }
         }
         Ok(())
-    }
+    });
 }
 
 #[derive(Debug, Clone)]
@@ -45,19 +40,16 @@ pub struct PingerState {
 }
 
 #[actor(
-    msg = PingerMsg,
+    msg   = PingerMsg,
     state = PingerState,
-    args = (ActorRef<PongerMsg>, u64),
+    args  = (ActorRef<PongerMsg>, u64),
     pre_start = on_start
 )]
 pub struct Pinger;
 
 impl Pinger {
-    pub async fn on_start(
-        &self,
-        myself: ActorRef<PingerMsg>,
-        (ponger, total): (ActorRef<PongerMsg>, u64),
-    ) -> Result<PingerState, ActorProcessingErr> {
+    actor_pre_start!({
+        let (ponger, total) = args;
         println!("[Pinger] starting with {total} exchanges");
 
         if total > 0 {
@@ -70,14 +62,9 @@ impl Pinger {
             remaining: total,
             ponger,
         })
-    }
+    });
 
-    pub async fn handle_msg(
-        &self,
-        myself: ActorRef<PingerMsg>,
-        msg: PingerMsg,
-        state: &mut PingerState,
-    ) -> Result<(), ActorProcessingErr> {
+    actor_handle!({
         match msg {
             PingerMsg::Pong(n) => {
                 println!(
@@ -102,7 +89,7 @@ impl Pinger {
             }
         }
         Ok(())
-    }
+    });
 }
 
 #[doc = include_str!("../doc/host.md")]
