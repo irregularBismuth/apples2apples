@@ -38,25 +38,25 @@ pub fn expand(input: &DeriveInput, v: &ValidatedActorArgs) -> proc_macro2::Token
         #input
 
         #[ractor::async_trait]
-        impl #impl_generics ractor::Actor for #name #ty_generics #where_clause {
+        impl #impl_generics ::ractor::Actor for #name #ty_generics #where_clause {
             type Msg = #msg;
             type State = #state;
             type Arguments = #args_ty;
 
             async fn pre_start(
                 &self,
-                myself: ractor::ActorRef<Self::Msg>,
+                myself: ::ractor::ActorRef<Self::Msg>,
                 args: Self::Arguments
-            ) -> ::core::result::Result<Self::State, ractor::ActorProcessingErr> {
+            ) -> ::core::result::Result<Self::State, ::ractor::ActorProcessingErr> {
                 #pre_start_body
             }
 
             async fn handle(
                 &self,
-                myself: ractor::ActorRef<Self::Msg>,
+                myself: ::ractor::ActorRef<Self::Msg>,
                 msg: Self::Msg,
                 state: &mut Self::State
-            ) -> ::core::result::Result<(), ractor::ActorProcessingErr> {
+            ) -> ::core::result::Result<(), ::ractor::ActorProcessingErr> {
                 self.handle_msg(myself, msg, state).await
             }
         }
