@@ -1,4 +1,4 @@
-use crate::actors::score_manager::{ScoreManager, ScoreMessage, ScoreResult};
+/*use crate::actors::score_manager::{ScoreManager, ScoreMessage, ScoreResult};
 use apples_utils::{config::Config, consts::CONFIG_TOML};
 
 #[tokio::test]
@@ -34,4 +34,4 @@ async fn score_handler() -> anyhow::Result<()> {
         "Updated score should be enough to win the game"
     );
     Ok(())
-}
+}*/

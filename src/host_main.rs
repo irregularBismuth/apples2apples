@@ -3,6 +3,8 @@ use actor_macros::{actor, actor_handle, actor_pre_start};
 use anyhow::Result;
 use apples_utils::{config::Config, consts::CONFIG_TOML, game_mode::GameMode};
 use ractor::{cast, Actor, ActorProcessingErr, ActorRef};
+use crate::actors::dealer::Dealer;
+use core::num::NonZeroUsize;
 
 #[derive(Debug, Clone)]
 pub enum PongerMsg {
@@ -110,9 +112,14 @@ pub async fn host_main(players: usize, bots: usize) -> Result<()> {
                     config.green_deck_path().into(),
                 )
                 .await?;
-                deck.shuffle();
                 deck
             };
+
+            let (dealer,_)= Actor::spawn(None, Dealer, deck).await?;
+           // let _ = ractor::cast!(dealer, crate::actors::dealer::DealerMsg::Shuffle)?;
+           // let amount= NonZeroUsize::new(7000).expect("Failed to construct");
+          //  let cards = ractor::call!(dealer, crate::actors::dealer::DealerMsg::DealRedCards,amount)??;
+            
 
             let (ponger_ref, _ponger_task) = Actor::spawn(None, Ponger, ()).await?;
 

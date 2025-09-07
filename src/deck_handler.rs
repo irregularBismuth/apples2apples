@@ -14,7 +14,7 @@ pub struct DeckHandler {
 }
 
 impl DeckHandler {
-    /// Create a empty green and red deck and return the instance of the deck handler
+    /// Create a empty green and red deck and return the instance of the deck_handler
     pub fn new() -> Self {
         Self {
             red_deck: RedDeck::new(),

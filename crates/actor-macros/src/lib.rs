@@ -11,6 +11,18 @@ use proc_macro2::TokenStream as TokenStream2;
 use syn::{parse_macro_input, spanned::Spanned, DeriveInput};
 use validate::args::validate_actor_args;
 
+/// Helper macro to parse either a block or expression into a block
+macro_rules! parse_block_or_expr {
+    ($input:expr) => {
+        if let Ok(block) = syn::parse::<syn::Block>($input.clone()) {
+            block
+        } else {
+            let expr: syn::Expr = syn::parse($input).expect("expected block or expression");
+            syn::parse_quote!({ #expr })
+        }
+    };
+}
+
 /// Generates a complete Actor trait implementation for a struct.
 ///
 /// This attribute macro creates all the necessary boilerplate for implementing
@@ -143,7 +155,8 @@ pub fn actor(attr: TokenStream, item: TokenStream) -> TokenStream {
 /// ```
 #[proc_macro]
 pub fn actor_pre_start(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let body: syn::Block = syn::parse(input).expect("expected a block: {{ ... }}");
+    let body = parse_block_or_expr!(input);
+
     quote::quote! {
         pub async fn on_start(
             &self,
@@ -239,7 +252,7 @@ pub fn actor_pre_start(input: proc_macro::TokenStream) -> proc_macro::TokenStrea
 /// ```
 #[proc_macro]
 pub fn actor_handle(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let body: syn::Block = syn::parse(input).expect("expected a block: {{ ... }}");
+    let body = parse_block_or_expr!(input);
     quote::quote! {
         pub async fn handle_msg(
             &self,
