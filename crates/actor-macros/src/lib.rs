@@ -8,7 +8,7 @@ use expand::expand::expand;
 use parse::actor_args::parse_actor_args;
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
-use syn::{DeriveInput, parse_macro_input, spanned::Spanned};
+use syn::{parse_macro_input, spanned::Spanned, DeriveInput};
 use validate::args::validate_actor_args;
 
 /// Generates a complete Actor trait implementation for a struct.

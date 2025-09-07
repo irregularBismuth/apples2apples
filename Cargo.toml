@@ -15,6 +15,7 @@ anyhow = "1.0"
 ahash = "0.8.12"
 serde = {workspace = true}
 ractor = { version = "0.15.8", features = ["async-trait" ] }
+thiserror = "2.0.16"
 
 [workspace]
 members = [
