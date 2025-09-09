@@ -1,10 +1,10 @@
+use crate::actors::dealer::Dealer;
 use crate::deck_handler::DeckHandler;
 use actor_macros::{actor, actor_handle, actor_pre_start};
 use anyhow::Result;
 use apples_utils::{config::Config, consts::CONFIG_TOML, game_mode::GameMode};
-use ractor::{cast, Actor, ActorProcessingErr, ActorRef};
-use crate::actors::dealer::Dealer;
 use core::num::NonZeroUsize;
+use ractor::{cast, Actor, ActorProcessingErr, ActorRef};
 
 #[derive(Debug, Clone)]
 pub enum PongerMsg {
@@ -14,85 +14,6 @@ pub enum PongerMsg {
 #[derive(Debug, Clone)]
 pub enum PingerMsg {
     Pong(u64),
-}
-
-#[actor(
-    msg   = PongerMsg,
-    state = ()  
-)]
-pub struct Ponger;
-
-impl Ponger {
-    actor_handle!({
-        match msg {
-            PongerMsg::Ping(reply_to, n) => {
-                println!("[Ponger] got Ping({n}), sending Pong({n}) back");
-                cast!(reply_to, PingerMsg::Pong(n))
-                    .map_err(|e| ActorProcessingErr::from(format!("failed to cast Pong: {e}")))?;
-            }
-        }
-        Ok(())
-    });
-}
-
-#[derive(Debug, Clone)]
-pub struct PingerState {
-    remaining: u64,
-    ponger: ActorRef<PongerMsg>,
-}
-
-#[actor(
-    msg   = PingerMsg,
-    state = PingerState,
-    args  = (ActorRef<PongerMsg>, u64),
-    pre_start = on_start
-)]
-pub struct Pinger;
-
-impl Pinger {
-    actor_pre_start!({
-        let (ponger, total) = args;
-        println!("[Pinger] starting with {total} exchanges");
-
-        if total > 0 {
-            cast!(ponger, PongerMsg::Ping(myself.clone(), 1)).map_err(|e| {
-                ActorProcessingErr::from(format!("failed to cast initial Ping: {e}"))
-            })?;
-        }
-
-        Ok(PingerState {
-            remaining: total,
-            ponger,
-        })
-    });
-
-    actor_handle!({
-        
-        match msg {
-            PingerMsg::Pong(n) => {
-                println!(
-                    "[Pinger] got Pong({n}), remaining={}",
-                    state.remaining.saturating_sub(1)
-                );
-
-                if state.remaining == 0 {
-                    return Ok(());
-                }
-
-                state.remaining -= 1;
-
-                if state.remaining == 0 {
-                    println!("[Pinger] done!");
-                } else {
-                    let next = n + 1;
-                    cast!(state.ponger, PongerMsg::Ping(myself.clone(), next)).map_err(|e| {
-                        ActorProcessingErr::from(format!("failed to cast next Ping: {e}"))
-                    })?;
-                }
-            }
-        }
-        Ok(())
-    });
 }
 
 #[doc = include_str!("../doc/host.md")]
@@ -115,17 +36,10 @@ pub async fn host_main(players: usize, bots: usize) -> Result<()> {
                 deck
             };
 
-            let (dealer,_)= Actor::spawn(None, Dealer, deck).await?;
-           // let _ = ractor::cast!(dealer, crate::actors::dealer::DealerMsg::Shuffle)?;
-           // let amount= NonZeroUsize::new(7000).expect("Failed to construct");
-          //  let cards = ractor::call!(dealer, crate::actors::dealer::DealerMsg::DealRedCards,amount)??;
-            
-
-            let (ponger_ref, _ponger_task) = Actor::spawn(None, Ponger, ()).await?;
-
-            let exchanges: u64 = 5;
-            let (_pinger_ref, _pinger_task) =
-                Actor::spawn(None, Pinger, (ponger_ref, exchanges)).await?;
+            let (dealer, _) = Actor::spawn(None, Dealer, deck).await?;
+            // let _ = ractor::cast!(dealer, crate::actors::dealer::DealerMsg::Shuffle)?;
+            // let amount= NonZeroUsize::new(7000).expect("Failed to construct");
+            //  let cards = ractor::call!(dealer, crate::actors::dealer::DealerMsg::DealRedCards,amount)??;
 
             tokio::time::sleep(tokio::time::Duration::from_millis(300)).await;
 

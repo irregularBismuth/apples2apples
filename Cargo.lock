@@ -3,15 +3,6 @@
 version = 4
 
 [[package]]
-name = "actor-macros"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "addr2line"
 version = "0.24.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -136,12 +127,12 @@ dependencies = [
 name = "apples2apples"
 version = "0.1.0"
 dependencies = [
- "actor-macros",
  "ahash",
  "anyhow",
  "apples-core",
  "apples-protocol",
  "apples-utils",
+ "dsl-ractor",
  "ractor",
  "rand",
  "serde",
@@ -332,6 +323,17 @@ dependencies = [
  "lock_api",
  "once_cell",
  "parking_lot_core",
+]
+
+[[package]]
+name = "dsl-ractor"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "44589ca221e33f9ad44e412d1ef912c33738afff3dd774c4e33dc34e8139caab"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

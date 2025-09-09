@@ -8,7 +8,6 @@ tokio = { workspace = true, features = ["full"] }
 apples-core = {path = "crates/core"}
 apples-protocol = {path = "crates/protocol"}
 apples-utils = {path = "crates/utils"}
-actor-macros = {path = "crates/actor-macros"}
 rand.workspace = true
 anyhow = "1.0"
 
@@ -18,11 +17,11 @@ ractor = { version = "0.15.8", features = ["async-trait" ] }
 thiserror = "2.0.16"
 tracing.workspace = true
 tracing-subscriber.workspace = true
+dsl-ractor = "0.1.0"
 
 [workspace]
 members = [
     "crates/core",
-    "crates/actor-macros",
     "crates/protocol", 
     "crates/utils"
 ]
