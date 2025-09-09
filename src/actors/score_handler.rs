@@ -1,11 +1,13 @@
 use ::ractor::{ActorProcessingErr, RpcReplyPort};
 use actor_macros::{actor, actor_handle, actor_pre_start};
 use ahash::AHashMap as Map;
+use anyhow::Result;
 use apples_core::player::player::PlayerId;
 use core::num::NonZeroUsize;
 use thiserror::Error;
 
-pub type ScoreResult = std::result::Result<Score, Error>;
+#[Error]
+pub enum ScoreError {}
 
 #[derive(Debug)]
 pub enum ScoreManagerMsg {
