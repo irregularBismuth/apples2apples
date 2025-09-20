@@ -4,7 +4,7 @@ use {
     std::fmt,
 };
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
 pub struct GreenCard(BaseCard);
 
 impl Card for GreenCard {

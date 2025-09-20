@@ -7,7 +7,7 @@ use {
 };
 
 /// Struct for Deck that takes the Card Trait and holds a vector of cards
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone)]
 pub struct Deck<T: Card> {
     cards: Vec<T>,
 }
@@ -18,23 +18,28 @@ impl<T: Card + Clone + Eq + Hash> Deck<T> {
         Self { cards: Vec::new() }
     }
     /// shuffle the deck
+    #[inline]
     pub fn shuffle(&mut self) {
         let mut rng = rand::thread_rng();
         self.cards.shuffle(&mut rng);
     }
     /// Tries to remove the `card` given the index panics if the index
+    #[inline]
     pub fn draw_index(&mut self, index: usize) -> T {
         self.cards.remove(index)
     }
     /// returns an option to an card
+    #[inline]
     pub fn draw_card(&mut self) -> Option<T> {
         self.cards.pop()
     }
     /// adds a card to the deck
+    #[inline]
     pub fn add_card(&mut self, card: T) {
         self.cards.push(card)
     }
     /// returns the amount of cards left inside deck
+    #[inline]
     pub fn deck_size(&self) -> usize {
         self.cards.len()
     }
@@ -45,10 +50,12 @@ impl<T: Card + Clone + Eq + Hash> Deck<T> {
         perm && different
     }
     /// returns a copy of the underlying deck   
+    #[inline]
     pub fn get_cards(&self) -> Vec<T> {
         self.cards.clone()
     }
 
+    #[inline]
     pub fn extend(&mut self, deck: Deck<T>) {
         self.cards.extend(deck.cards)
     }

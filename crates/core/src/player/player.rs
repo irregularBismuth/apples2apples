@@ -1,10 +1,17 @@
 use {
     crate::cards::{green_card::GreenCard, red_card::RedCard},
     async_trait::async_trait,
+    std::fmt,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd)]
 pub struct PlayerId(pub usize);
+
+impl fmt::Display for PlayerId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "PlayerID: {}", self.0)
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct PlayerHand {

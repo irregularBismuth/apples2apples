@@ -1,6 +1,6 @@
 /// Defines the trait Card which requires the 3 getter functions to be implemented
 use serde::{Deserialize, Serialize};
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
 pub struct BaseCard {
     name_: String,
     text_: String,

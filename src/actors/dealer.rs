@@ -1,8 +1,8 @@
 use crate::deck_handler::DeckHandler;
 use ::ractor::{ActorProcessingErr, RpcReplyPort};
-use actor_macros::{actor, actor_handle, actor_pre_start};
 use apples_core::{cards::card::Card, GreenCard, GreenDeck, RedCard, RedDeck};
 use core::num::NonZeroUsize;
+use dsl_ractor::{actor, actor_handle, actor_pre_start};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -30,7 +30,6 @@ pub enum DealerMsg {
     msg = DealerMsg,
     state = DealerState,
     args = DeckHandler,
-    pre_start = on_start
 )]
 pub(crate) struct Dealer;
 

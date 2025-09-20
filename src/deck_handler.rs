@@ -8,6 +8,7 @@ use {
 };
 
 /// DeckHandler class that holds a green & a red deck
+#[derive(Debug, Default)]
 pub struct DeckHandler {
     red_deck: RedDeck,
     green_deck: GreenDeck,
@@ -15,36 +16,40 @@ pub struct DeckHandler {
 
 impl DeckHandler {
     /// Create a empty green and red deck and return the instance of the deck_handler
+    #[inline]
     pub fn new() -> Self {
-        Self {
-            red_deck: RedDeck::new(),
-            green_deck: GreenDeck::new(),
-        }
+        Self::default()
     }
 
     /// Insert a red card to the deck
+    #[inline]
     pub fn insert_red_card(&mut self, card: RedCard) {
         self.red_deck.add_card(card);
     }
 
     /// Insert a green card to the deck
+    #[inline]
     pub fn insert_green_card(&mut self, card: GreenCard) {
         self.green_deck.add_card(card);
     }
 
     /// Retrieve card from the green deck
+    #[inline]
     pub fn get_green_card(&mut self) -> Option<GreenCard> {
         self.green_deck.draw_card()
     }
     /// Retrieve card from the red deck
+    #[inline]
     pub fn get_red_card(&mut self) -> Option<RedCard> {
         self.red_deck.draw_card()
     }
 
     /// Shuffle the decks
-    pub fn shuffle(&mut self) {
+    #[inline]
+    pub fn shuffle(&mut self) -> &mut Self {
         self.red_deck.shuffle();
         self.green_deck.shuffle();
+        self
     }
 
     /// Load the decks
@@ -61,10 +66,12 @@ impl DeckHandler {
     }
 
     /// Return the deck size of the green deck
+    #[inline]
     pub fn green_card_deck_size(&self) -> usize {
         self.green_deck.deck_size()
     }
     /// Return the deck size of the red deck
+    #[inline]
     pub fn red_card_deck_size(&self) -> usize {
         self.red_deck.deck_size()
     }
