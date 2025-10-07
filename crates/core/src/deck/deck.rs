@@ -1,18 +1,24 @@
 use {
-    super::super::cards::card::Card,
+    crate::cards::card::Card,
     itertools::Itertools,
     rand::seq::SliceRandom,
-    serde::{Deserialize, Serialize},
-    std::hash::Hash,
+    serde::{de::DeserializeOwned, Deserialize, Serialize},
 };
 
 /// Struct for Deck that takes the Card Trait and holds a vector of cards
-#[derive(Debug, Default, Serialize, Deserialize, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(bound(serialize = "T: Serialize", deserialize = "T: DeserializeOwned"))]
 pub struct Deck<T: Card> {
     cards: Vec<T>,
 }
 
-impl<T: Card + Clone + Eq + Hash> Deck<T> {
+impl<T: Card> Default for Deck<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<T: Card> Deck<T> {
     /// Creates an empty deck
     pub fn new() -> Self {
         Self { cards: Vec::new() }
@@ -23,11 +29,13 @@ impl<T: Card + Clone + Eq + Hash> Deck<T> {
         let mut rng = rand::thread_rng();
         self.cards.shuffle(&mut rng);
     }
-    /// Tries to remove the `card` given the index panics if the index
+
+    /// Tries to remove the card at `index`, returning `None` if the index is out of bounds.
     #[inline]
-    pub fn draw_index(&mut self, index: usize) -> T {
-        self.cards.remove(index)
+    pub fn draw_index(&mut self, index: usize) -> Option<T> {
+        (index < self.cards.len()).then(|| self.cards.remove(index))
     }
+
     /// returns an option to an card
     #[inline]
     pub fn draw_card(&mut self) -> Option<T> {

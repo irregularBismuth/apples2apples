@@ -1,14 +1,15 @@
 [package]
 name = "apples-protocol"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2024"
 
 [dependencies]
 anyhow = "1.0.98"
-async-trait = "0.1.88"
+bincode = "2.0.1"
 bytes = { version = "1.10.1", features = ["serde"] }
-futures = "0.3.31"
 serde.workspace = true
-serde_json.workspace = true
+thiserror = "2.0.16"
 tokio = { version = "1.0", features = ["io-util", "macros", "net", "process", "test-util"] }
 tokio-util = { version = "0.7.15", features = ["codec"] }
+zerocopy = "0.8.27"
+zerocopy-derive = "0.8.27"

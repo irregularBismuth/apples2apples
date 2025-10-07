@@ -1,7 +1,7 @@
 pub mod cards;
 pub mod deck;
 pub mod player;
-pub mod protocol;
+
 pub use {
     cards::{green_card::GreenCard, red_card::RedCard},
     deck::{green_deck::GreenDeck, red_deck::RedDeck},

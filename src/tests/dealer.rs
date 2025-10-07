@@ -7,6 +7,7 @@ use core::num::NonZeroUsize;
 async fn deal_cards_success() -> anyhow::Result<()> {
     let mut handler = DeckHandler::new();
     let config = Config::parse_config(CONFIG_TOML.into())?;
+
     handler
         .load_decks(
             config.red_deck_path().into(),

@@ -1,5 +1,5 @@
 use {
-    anyhow::Result,
+    anyhow::{bail, Context, Result},
     apples_core::{
         cards::card::{BaseCard, Card},
         deck::deck::Deck,
@@ -7,67 +7,63 @@ use {
     std::path::Path,
     tokio::{fs::File, io::AsyncReadExt},
 };
-/// Generic deck loader that loads the deck from the file_path and tries and parses the file and
-/// builds the deck and returns it if it succedes otherwise return error
+
 pub async fn load_deck<T, P>(file_path: P) -> Result<Deck<T>>
 where
     T: Card + From<BaseCard>,
     P: AsRef<Path>,
 {
-    let mut file = match File::open(file_path.as_ref()).await {
-        Ok(f) => f,
-        Err(e) => return Err(anyhow::anyhow!("Failed to open file: {:?}", e)),
+    let mut file = File::open(file_path.as_ref())
+        .await
+        .with_context(|| format!("Failed to open {:?}", file_path.as_ref()))?;
+
+    let mut buf = Vec::new();
+
+    file.read_to_end(&mut buf)
+        .await
+        .context("Failed to read deck file")?;
+
+    let contents = match String::from_utf8(buf) {
+        Ok(s) => s,
+        Err(err) => String::from_utf8_lossy(&err.into_bytes()).into_owned(),
     };
 
     let mut deck = Deck::<T>::new();
-    let mut bytes = Vec::new();
+    let mut id: usize = 0;
 
-    if let Err(e) = file.read_to_end(&mut bytes).await {
-        return Err(anyhow::anyhow!("Failed to read file: {:?}", e));
-    }
-
-    let contents = String::from_utf8_lossy(&bytes);
-    let mut id = 0;
-    for (line_num, line) in contents.lines().enumerate() {
-        let line = line.trim();
+    for (idx, raw_line) in contents.lines().enumerate() {
+        let line_no = idx + 1;
+        let line = raw_line.trim();
         if line.is_empty() {
             continue;
         }
-        let name = extract_between(&line, '[', ']');
-        let text = extract_text(&line);
 
-        if let (Some(name), Some(text)) = (name, text) {
-            if !name.is_empty() && !text.is_empty() {
-                let card = T::from(BaseCard::new(name, text, id));
-                deck.add_card(card);
-                id += 1;
-            } else {
-                eprintln!("Warning: Empty name or text at line {}", line_num + 1);
+        let (name_start, name_end) = match (line.find('['), line.find(']')) {
+            (Some(s), Some(e)) if e > s => (s + 1, e),
+            _ => {
+                bail!("Line {line_no}: missing [name] segment: '{line}'");
             }
-        } else {
-            eprintln!(
-                "Warning: Failed to parse at line {}: '{}'",
-                line_num + 1,
-                line
-            );
+        };
+        let name = line[name_start..name_end].trim();
+        if name.is_empty() {
+            bail!("Line {line_no}: empty name inside [ ]");
         }
+
+        let after_bracket = line[name_end + 1..].trim_start();
+        anyhow::ensure!(
+            after_bracket.starts_with('-'),
+            "Line {line_no}: missing '-' separator"
+        );
+
+        let text = after_bracket[1..].trim();
+        if text.is_empty() {
+            bail!("Line {line_no}: empty text after ' - '");
+        }
+
+        let card = T::from(BaseCard::new(id, name.to_string(), text.to_string()));
+        deck.add_card(card);
+        id = id.checked_add(1).context("Card ID overflow")?;
     }
 
     Ok(deck)
-}
-
-/// Helper function to extract text between characthers start - end
-fn extract_between(text: &str, start: char, end: char) -> Option<String> {
-    text.split(start)
-        .nth(1)
-        .and_then(|s| s.split(end).next())
-        .map(|s| s.trim().to_string())
-}
-
-/// Helper function to extract after hyphon
-fn extract_text(line: &str) -> Option<String> {
-    line.split(" -")
-        .nth(1)
-        .map(|s| s.trim().to_string())
-        .filter(|s| !s.is_empty())
 }

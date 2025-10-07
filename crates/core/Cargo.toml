@@ -7,6 +7,4 @@ edition = "2024"
 rand="0.8"
 itertools="0.12"
 serde.workspace = true
-async-trait = "0.1.88"
 ahash = "0.8.12"
-

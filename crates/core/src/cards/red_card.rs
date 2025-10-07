@@ -1,57 +1,59 @@
 use {
-    super::card::BaseCard,
+    super::card::{BaseCard, Card, CardId},
     serde::{Deserialize, Serialize},
     std::fmt,
 };
 
-#[derive(Debug, Default, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
 pub struct RedCard(BaseCard);
 
-impl Card for RedCard {
-    fn get_card_id(&self) -> usize {
-        self.0.get_card_id()
-    }
-
-    fn get_card_name(&self) -> &str {
-        self.0.get_card_name()
-    }
-
-    fn get_card_text(&self) -> &str {
-        self.0.get_card_text()
-    }
-}
-
 impl RedCard {
-    /// Creates a new red card with corresponding input parameters
-    /// name_ : String,
-    /// text_ : String,
-    /// id_ : usize
-    pub fn new(name_: String, text_: String, id_: usize) -> Self {
-        Self(BaseCard::new(name_, text_, id_))
+    pub fn new(
+        id: impl Into<CardId>,
+        name: impl Into<String>,
+        description: impl Into<String>,
+    ) -> Self {
+        Self(BaseCard::new(id, name, description))
+    }
+
+    #[inline]
+    pub fn base(&self) -> &BaseCard {
+        &self.0
     }
 }
 
-/// Implement the display trait for easily displaying the RedCard
+impl Card for RedCard {
+    #[inline]
+    fn id(&self) -> CardId {
+        self.0.id()
+    }
+
+    #[inline]
+    fn name(&self) -> &str {
+        self.0.name()
+    }
+
+    #[inline]
+    fn description(&self) -> &str {
+        self.0.description()
+    }
+}
+
 impl fmt::Display for RedCard {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(
             f,
-            "Redcard: ( \n name {} \n text {} \n id {} )",
-            self.get_card_name(),
-            self.get_card_text(),
-            self.get_card_id()
+            "Red card: (\n name {}\n text {}\n id {} )",
+            self.name(),
+            self.description(),
+            self.id().value()
         )
     }
 }
 
 impl From<BaseCard> for RedCard {
+    #[inline]
     fn from(base: BaseCard) -> Self {
-        RedCard::new(
-            base.get_card_name().to_string(),
-            base.get_card_text().to_string(),
-            base.get_card_id(),
-        )
+        Self(base)
     }
 }
-
-pub use super::card::Card;

@@ -1,0 +1,54 @@
+mod codec;
+mod error;
+mod header;
+use zerocopy::byteorder::big_endian::U16;
+use zerocopy_derive::{FromBytes, IntoBytes, Unaligned};
+
+/// Protocol version
+#[repr(C)]
+#[derive(FromBytes, IntoBytes, Unaligned, Clone, Copy, Debug)]
+struct Version(U16);
+
+#[derive(Debug, Clone, Copy)]
+pub struct InvalidKind(pub u8);
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug)]
+pub enum Kind {
+    Control,
+    Game,
+    Error,
+}
+
+impl TryFrom<u8> for Kind {
+    type Error = InvalidKind;
+
+    #[inline]
+    fn try_from(v: u8) -> Result<Self, Error> {
+        match v {
+            0 => Ok(Kind::Control),
+            1 => Ok(Kind::Game),
+            2 => Ok(Kind::Error),
+            _ => Err(InvalidKind(v)),
+        }
+    }
+}
+
+impl From<Kind> for u8 {
+    #[inline]
+    fn from(k: Kind) -> u8 {
+        k as u8
+    }
+}
+
+#[repr(C)]
+#[derive(FromBytes, IntoBytes, Unaligned, Clone, Copy, Debug)]
+#[non_exhaustive]
+pub struct Header {
+    pub version: Version,
+}
+use serde::{Deserialize, Serialize};
+use thiserror::Error;
+
+#[derive(Serialize, Deserialize, Debug)]
+pub enum ProtoError {}

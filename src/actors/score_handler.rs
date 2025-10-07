@@ -49,6 +49,7 @@ impl ScoreManager {
             ScoreManagerMsg::RetrieveScore(id, reply) => {
                 let Some(score) = state.scores.get(&id).copied() else {
                     let _ = reply.send(Err(ScoreError::PlayerNotFound{ player_id: id}));
+                    tracing::error!("Player not found {id}");
                     return Ok(());
                 };
                 let _ = reply.send(Ok(score));

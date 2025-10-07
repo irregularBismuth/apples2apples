@@ -3,3 +3,4 @@ pub mod config;
 pub mod consts;
 pub mod deck_loader;
 pub mod game_mode;
+pub mod setup_tracing;

@@ -2,10 +2,12 @@ use {
     anyhow::Result,
     apples2apples::{client_main::client_main, host_main::host_main},
     apples_utils::cli::{parse_args, Mode},
+    apples_utils::setup_tracing::setup_logging,
 };
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    setup_logging()?;
     let mode = parse_args();
     match mode {
         Mode::Host { players, bots } => host_main(players, bots).await?,
